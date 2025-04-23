@@ -1,0 +1,323 @@
+{
+  "components": {
+    "comp-data-ingestion": {
+      "executorLabel": "exec-data-ingestion",
+      "inputDefinitions": {
+        "parameters": {
+          "gcs_bucket": {
+            "parameterType": "STRING"
+          },
+          "project_id": {
+            "parameterType": "STRING"
+          }
+        }
+      },
+      "outputDefinitions": {
+        "artifacts": {
+          "output_dataset": {
+            "artifactType": {
+              "schemaTitle": "system.Dataset",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        }
+      }
+    },
+    "comp-data-preprocessing": {
+      "executorLabel": "exec-data-preprocessing",
+      "inputDefinitions": {
+        "artifacts": {
+          "dataset_path": {
+            "artifactType": {
+              "schemaTitle": "system.Dataset",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        }
+      },
+      "outputDefinitions": {
+        "artifacts": {
+          "processed_data": {
+            "artifactType": {
+              "schemaTitle": "system.Dataset",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        }
+      }
+    },
+    "comp-deploy-model": {
+      "executorLabel": "exec-deploy-model",
+      "inputDefinitions": {
+        "artifacts": {
+          "model_path": {
+            "artifactType": {
+              "schemaTitle": "system.Model",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        },
+        "parameters": {
+          "gcs_bucket": {
+            "parameterType": "STRING"
+          },
+          "model_name": {
+            "parameterType": "STRING"
+          },
+          "project_id": {
+            "parameterType": "STRING"
+          },
+          "region": {
+            "parameterType": "STRING"
+          }
+        }
+      }
+    },
+    "comp-train-model": {
+      "executorLabel": "exec-train-model",
+      "inputDefinitions": {
+        "artifacts": {
+          "processed_data": {
+            "artifactType": {
+              "schemaTitle": "system.Dataset",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        }
+      },
+      "outputDefinitions": {
+        "artifacts": {
+          "model": {
+            "artifactType": {
+              "schemaTitle": "system.Model",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        }
+      }
+    }
+  },
+  "deploymentSpec": {
+    "executors": {
+      "exec-data-ingestion": {
+        "container": {
+          "args": [
+            "--executor_input",
+            "{{$}}",
+            "--function_to_execute",
+            "data_ingestion"
+          ],
+          "command": [
+            "sh",
+            "-c",
+            "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'kfp==2.12.1' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&  python3 -m pip install --quiet --no-warn-script-location 'pandas' 'scikit-learn' 'numpy' 'google-cloud-storage' && \"$0\" \"$@\"\n",
+            "sh",
+            "-ec",
+            "program_path=$(mktemp -d)\n\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+            "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef data_ingestion(\n    project_id: str,\n    gcs_bucket: str,\n    output_dataset: Output[Dataset]\n):\n    \"\"\"Ingest wine data from GCS bucket.\"\"\"\n    import pandas as pd\n    from google.cloud import storage\n    import os\n\n    # Create the local directory if it doesn't exist\n    os.makedirs(\"/dataset/raw\", exist_ok=True)\n\n    # Download data from GCS bucket\n    storage_client = storage.Client(project=project_id)\n    bucket = storage_client.bucket(gcs_bucket)\n    blob = bucket.blob(\"dataset/wine_v1.csv\")\n\n    # Try to download the file, raise error if not found\n    try:\n        local_path = \"/dataset/raw/wine_v1.csv\"\n        blob.download_to_filename(local_path)\n        print(\n            f\"Successfully downloaded wine data from gs://{gcs_bucket}/dataset/wine_v1.csv to {local_path}\")\n\n        # Verify the file was downloaded and has content\n        if os.path.getsize(local_path) == 0:\n            raise ValueError(\"Downloaded file is empty\")\n\n        # Load the CSV to verify it's valid\n        df = pd.read_csv(local_path)\n        print(\n            f\"Successfully loaded wine dataset with {df.shape[0]} rows and {df.shape[1]} columns\")\n\n        # Save data path to the output\n        with open(output_dataset.path, 'w') as f:\n            f.write(local_path)\n\n    except Exception as e:\n        error_msg = f\"Error: Could not load wine dataset from gs://{gcs_bucket}/dataset/wine_v1.csv: {str(e)}\"\n        print(error_msg)\n        raise RuntimeError(error_msg)\n\n"
+          ],
+          "image": "python:3.9"
+        }
+      },
+      "exec-data-preprocessing": {
+        "container": {
+          "args": [
+            "--executor_input",
+            "{{$}}",
+            "--function_to_execute",
+            "data_preprocessing"
+          ],
+          "command": [
+            "sh",
+            "-c",
+            "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'kfp==2.12.1' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&  python3 -m pip install --quiet --no-warn-script-location 'pandas' 'scikit-learn' 'numpy' && \"$0\" \"$@\"\n",
+            "sh",
+            "-ec",
+            "program_path=$(mktemp -d)\n\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+            "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef data_preprocessing(\n    dataset_path: Input[Dataset],\n    processed_data: Output[Dataset]\n):\n    \"\"\"Preprocess wine data for model training.\"\"\"\n    import pandas as pd\n    import numpy as np\n    from sklearn.preprocessing import StandardScaler, OneHotEncoder\n    from sklearn.compose import ColumnTransformer\n    import pickle\n    import re\n\n    # Read the data path\n    with open(dataset_path.path, 'r') as f:\n        data_path = f.read()\n\n    # Load the wine data\n    df = pd.read_csv(data_path)\n    print(f\"Loaded data with {df.shape[0]} rows and {df.shape[1]} columns\")\n\n    # Clean and preprocess the data\n\n    # Extract numeric price values (removing currency symbols)\n    def extract_price(price_str):\n        if pd.isna(price_str):\n            return np.nan\n        match = re.search(r'(\\d+\\.?\\d*)', str(price_str))\n        if match:\n            return float(match.group(1))\n        return np.nan\n\n    # Extract numeric ABV values (removing percentage signs)\n    def extract_abv(abv_str):\n        if pd.isna(abv_str):\n            return np.nan\n        match = re.search(r'(\\d+\\.?\\d*)', str(abv_str))\n        if match:\n            return float(match.group(1))\n        return np.nan\n\n    # Extract numeric vintage values\n    def extract_vintage(vintage_str):\n        if pd.isna(vintage_str):\n            return np.nan\n        match = re.search(r'(\\d{4})', str(vintage_str))\n        if match:\n            return int(match.group(1))\n        return np.nan\n\n    # Apply transformations\n    df['price_numeric'] = df['Price'].apply(extract_price)\n    df['abv_numeric'] = df['ABV'].apply(extract_abv)\n    df['vintage_numeric'] = df['Vintage'].apply(extract_vintage)\n\n    # Define features for embedding calculation\n    numeric_features = ['price_numeric',\n                        'abv_numeric', 'vintage_numeric', 'Unit']\n    categorical_features = ['Grape', 'Country', 'Type', 'Region', 'Style']\n\n    # Handle missing values in numeric features\n    for feature in numeric_features:\n        df[feature] = df[feature].fillna(df[feature].median())\n\n    # Handle missing values in categorical features\n    for feature in categorical_features:\n        df[feature] = df[feature].fillna('Unknown')\n\n    # Create preprocessor pipeline\n    preprocessor = ColumnTransformer(\n        transformers=[\n            ('num', StandardScaler(), numeric_features),\n            ('cat', OneHotEncoder(handle_unknown='ignore'), categorical_features)\n        ])\n\n    # Apply preprocessing\n    X = preprocessor.fit_transform(df[numeric_features + categorical_features])\n\n    # Save processed data and preprocessing pipeline\n    processed_data_path = \"/tmp/processed_data.npz\"\n    # Use Title as the wine name and create unique IDs if they don't exist\n    if 'id' not in df.columns:\n        df['id'] = range(1, len(df) + 1)\n    np.savez(processed_data_path, X=X,\n             ids=df['id'].values, names=df['Title'].values)\n\n    with open(\"/tmp/preprocessor.pkl\", \"wb\") as f:\n        pickle.dump(preprocessor, f)\n\n    # Save paths to outputs\n    with open(processed_data.path, 'w') as f:\n        f.write(f\"{processed_data_path},{'/tmp/preprocessor.pkl'}\")\n\n"
+          ],
+          "image": "python:3.9"
+        }
+      },
+      "exec-deploy-model": {
+        "container": {
+          "args": [
+            "--executor_input",
+            "{{$}}",
+            "--function_to_execute",
+            "deploy_model"
+          ],
+          "command": [
+            "sh",
+            "-c",
+            "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'kfp==2.12.1' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&  python3 -m pip install --quiet --no-warn-script-location 'pandas' 'scikit-learn' 'numpy' 'google-cloud-storage' 'google-cloud-aiplatform' && \"$0\" \"$@\"\n",
+            "sh",
+            "-ec",
+            "program_path=$(mktemp -d)\n\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+            "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef deploy_model(\n    project_id: str,\n    model_name: str,\n    region: str,\n    model_path: Input[Model],\n    gcs_bucket: str\n):\n    \"\"\"Deploy the trained model to Vertex AI.\"\"\"\n    import os\n    from google.cloud import storage\n    from google.cloud import aiplatform\n\n    # Read the model path\n    with open(model_path.path, 'r') as f:\n        local_model_path = f.read()\n\n    # Upload model to GCS\n    storage_client = storage.Client(project=project_id)\n    bucket = storage_client.bucket(gcs_bucket)\n\n    model_filename = os.path.basename(local_model_path)\n    gcs_model_path = f\"models/{model_name}/{model_filename}\"\n    blob = bucket.blob(gcs_model_path)\n    blob.upload_from_filename(local_model_path)\n\n    full_gcs_path = f\"gs://{gcs_bucket}/{gcs_model_path}\"\n    print(f\"Model uploaded to: {full_gcs_path}\")\n\n    # Initialize Vertex AI\n    aiplatform.init(project=project_id, location=region)\n\n    # Create a model in Vertex Model Registry\n    model = aiplatform.Model.upload(\n        display_name=model_name,\n        artifact_uri=f\"gs://{gcs_bucket}/models/{model_name}\",\n        serving_container_image_uri=\"us-docker.pkg.dev/vertex-ai/prediction/sklearn-cpu.1-0:latest\",\n    )\n\n    print(\n        f\"Model registered in Vertex AI with resource name: {model.resource_name}\")\n\n    # Deploy the model\n    endpoint = model.deploy(\n        machine_type=\"n1-standard-2\",\n        min_replica_count=1,\n        max_replica_count=1\n    )\n\n    print(f\"Model deployed to endpoint: {endpoint.resource_name}\")\n\n"
+          ],
+          "image": "python:3.9"
+        }
+      },
+      "exec-train-model": {
+        "container": {
+          "args": [
+            "--executor_input",
+            "{{$}}",
+            "--function_to_execute",
+            "train_model"
+          ],
+          "command": [
+            "sh",
+            "-c",
+            "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'kfp==2.12.1' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&  python3 -m pip install --quiet --no-warn-script-location 'pandas' 'scikit-learn' 'numpy' && \"$0\" \"$@\"\n",
+            "sh",
+            "-ec",
+            "program_path=$(mktemp -d)\n\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+            "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef train_model(\n    processed_data: Input[Dataset],\n    model: Output[Model]\n):\n    \"\"\"Train a wine recommendation model using cosine similarity.\"\"\"\n    import numpy as np\n    from sklearn.metrics.pairwise import cosine_similarity\n    import pickle\n\n    # Read the processed data path\n    with open(processed_data.path, 'r') as f:\n        paths = f.read().split(',')\n        data_path = paths[0]\n        preprocessor_path = paths[1]\n\n    # Load the processed data\n    data = np.load(data_path)\n    X = data['X']\n    ids = data['ids']\n    names = data['names']\n\n    # Load the preprocessor\n    with open(preprocessor_path, \"rb\") as f:\n        preprocessor = pickle.dump(preprocessor, f)\n\n    # Compute cosine similarity matrix\n    similarity_matrix = cosine_similarity(X)\n\n    # Save the model (which includes the similarity matrix and metadata)\n    model_data = {\n        'similarity_matrix': similarity_matrix,\n        'ids': ids,\n        'names': names,\n        'preprocessor': preprocessor\n    }\n\n    model_path = \"/tmp/wine_recommendation_model.pkl\"\n    with open(model_path, \"wb\") as f:\n        pickle.dump(model_data, f)\n\n    # Save the model path\n    with open(model.path, 'w') as f:\n        f.write(model_path)\n\n"
+          ],
+          "image": "python:3.9"
+        }
+      }
+    }
+  },
+  "pipelineInfo": {
+    "description": "A pipeline to train and deploy a wine recommendation system",
+    "name": "wine-recommendation-pipeline"
+  },
+  "root": {
+    "dag": {
+      "tasks": {
+        "data-ingestion": {
+          "cachingOptions": {
+            "enableCache": true
+          },
+          "componentRef": {
+            "name": "comp-data-ingestion"
+          },
+          "inputs": {
+            "parameters": {
+              "gcs_bucket": {
+                "componentInputParameter": "gcs_bucket"
+              },
+              "project_id": {
+                "componentInputParameter": "project_id"
+              }
+            }
+          },
+          "taskInfo": {
+            "name": "data-ingestion"
+          }
+        },
+        "data-preprocessing": {
+          "cachingOptions": {
+            "enableCache": true
+          },
+          "componentRef": {
+            "name": "comp-data-preprocessing"
+          },
+          "dependentTasks": [
+            "data-ingestion"
+          ],
+          "inputs": {
+            "artifacts": {
+              "dataset_path": {
+                "taskOutputArtifact": {
+                  "outputArtifactKey": "output_dataset",
+                  "producerTask": "data-ingestion"
+                }
+              }
+            }
+          },
+          "taskInfo": {
+            "name": "data-preprocessing"
+          }
+        },
+        "deploy-model": {
+          "cachingOptions": {
+            "enableCache": true
+          },
+          "componentRef": {
+            "name": "comp-deploy-model"
+          },
+          "dependentTasks": [
+            "train-model"
+          ],
+          "inputs": {
+            "artifacts": {
+              "model_path": {
+                "taskOutputArtifact": {
+                  "outputArtifactKey": "model",
+                  "producerTask": "train-model"
+                }
+              }
+            },
+            "parameters": {
+              "gcs_bucket": {
+                "componentInputParameter": "gcs_bucket"
+              },
+              "model_name": {
+                "componentInputParameter": "model_name"
+              },
+              "project_id": {
+                "componentInputParameter": "project_id"
+              },
+              "region": {
+                "componentInputParameter": "region"
+              }
+            }
+          },
+          "taskInfo": {
+            "name": "deploy-model"
+          }
+        },
+        "train-model": {
+          "cachingOptions": {
+            "enableCache": true
+          },
+          "componentRef": {
+            "name": "comp-train-model"
+          },
+          "dependentTasks": [
+            "data-preprocessing"
+          ],
+          "inputs": {
+            "artifacts": {
+              "processed_data": {
+                "taskOutputArtifact": {
+                  "outputArtifactKey": "processed_data",
+                  "producerTask": "data-preprocessing"
+                }
+              }
+            }
+          },
+          "taskInfo": {
+            "name": "train-model"
+          }
+        }
+      }
+    },
+    "inputDefinitions": {
+      "parameters": {
+        "gcs_bucket": {
+          "parameterType": "STRING"
+        },
+        "model_name": {
+          "defaultValue": "wine-recommender",
+          "isOptional": true,
+          "parameterType": "STRING"
+        },
+        "project_id": {
+          "parameterType": "STRING"
+        },
+        "region": {
+          "defaultValue": "europe-west2",
+          "isOptional": true,
+          "parameterType": "STRING"
+        }
+      }
+    }
+  },
+  "schemaVersion": "2.1.0",
+  "sdkVersion": "kfp-2.12.1"
+}
