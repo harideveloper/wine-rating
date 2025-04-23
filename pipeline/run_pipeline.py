@@ -1,31 +1,58 @@
-# run_wine_rating_pipeline.py
+"""
+Run the wine rating prediction pipeline on Vertex AI.
+"""
 from google.cloud import aiplatform
 from wine_rating_pipeline import compile_pipeline
 from typing import Optional
+from constants import (
+    PROJECT_ID,
+    GCS_BUCKET,
+    DATA_PATH,
+    REGION,
+    PIPELINE_FILE,
+    PIPELINE_JOB_DISPLAY_NAME,
+    PIPELINE_ROOT_SUFFIX,
+    MODEL_DISPLAY_NAME,
+    ENDPOINT_DISPLAY_NAME,
+    EVALUATION_THRESHOLD,
+    TEST_SIZE,
+    RANDOM_STATE,
+    N_ESTIMATORS,
+    SERVING_CONTAINER_IMAGE_URI,
+    MACHINE_TYPE,
+    MIN_REPLICA_COUNT,
+    MAX_REPLICA_COUNT
+)
 
 
-def run_wine_rating_pipeline(
+def run_pipeline(
     project_id: str,
     gcs_bucket: str,
     data_path: str,
-    model_display_name: str = "wine-rating-model",
-    endpoint_display_name: str = "wine-rating-endpoint",
-    region: str = "europe-west2",
+    model_display_name: str = MODEL_DISPLAY_NAME,
+    endpoint_display_name: str = ENDPOINT_DISPLAY_NAME,
+    region: str = REGION,
     pipeline_root: Optional[str] = None,
-    evaluation_threshold: float = 0.6
+    evaluation_threshold: float = EVALUATION_THRESHOLD,
+    test_size: float = TEST_SIZE,
+    random_state: int = RANDOM_STATE,
+    n_estimators: int = N_ESTIMATORS,
+    serving_container_image_uri: str = SERVING_CONTAINER_IMAGE_URI,
+    machine_type: str = MACHINE_TYPE,
+    min_replica_count: int = MIN_REPLICA_COUNT,
+    max_replica_count: int = MAX_REPLICA_COUNT
 ):
     """Run the wine rating prediction pipeline on Vertex AI."""
     aiplatform.init(project=project_id, location=region)
 
     if pipeline_root is None:
-        pipeline_root = f"gs://{gcs_bucket}/pipeline_root/wine_rating"
+        pipeline_root = f"gs://{gcs_bucket}/{PIPELINE_ROOT_SUFFIX}"
 
-    pipeline_file = "/pipeline/wine_rating_pipeline.json"
-    compile_pipeline(pipeline_file)
+    compile_pipeline(PIPELINE_FILE)
 
     job = aiplatform.PipelineJob(
-        display_name="wine-rating-job",
-        template_path=pipeline_file,
+        display_name=PIPELINE_JOB_DISPLAY_NAME,
+        template_path=PIPELINE_FILE,
         pipeline_root=pipeline_root,
         parameter_values={
             "data_path": data_path,
@@ -34,8 +61,13 @@ def run_wine_rating_pipeline(
             "project": project_id,
             "region": region,
             "evaluation_threshold": evaluation_threshold,
-            "batch_input_uri": f"gs://{gcs_bucket}/batch-inputs/wine_input.csv",
-            "batch_output_uri": f"gs://{gcs_bucket}/batch-outputs/"
+            "test_size": test_size,
+            "random_state": random_state,
+            "n_estimators": n_estimators,
+            "serving_container_image_uri": serving_container_image_uri,
+            "machine_type": machine_type,
+            "min_replica_count": min_replica_count,
+            "max_replica_count": max_replica_count
         },
         enable_caching=True
     )
@@ -49,19 +81,21 @@ def run_wine_rating_pipeline(
 
 
 if __name__ == "__main__":
-    PROJECT_ID = "dev2-ea8f"
-    GCS_BUCKET = "model-output-wine-dev2-ea8f"
-    DATA_PATH = "gs://model-output-wine-dev2-ea8f/wine_data.csv"
-    REGION = "europe-west2"
-
-    job = run_wine_rating_pipeline(
+    job = run_pipeline(
         project_id=PROJECT_ID,
         gcs_bucket=GCS_BUCKET,
         data_path=DATA_PATH,
-        model_display_name="wine-rating-model",
-        endpoint_display_name="wine-rating-endpoint",
+        model_display_name=MODEL_DISPLAY_NAME,
+        endpoint_display_name=ENDPOINT_DISPLAY_NAME,
         region=REGION,
-        evaluation_threshold=0.6
+        evaluation_threshold=EVALUATION_THRESHOLD,
+        test_size=TEST_SIZE,
+        random_state=RANDOM_STATE,
+        n_estimators=N_ESTIMATORS,
+        serving_container_image_uri=SERVING_CONTAINER_IMAGE_URI,
+        machine_type=MACHINE_TYPE,
+        min_replica_count=MIN_REPLICA_COUNT,
+        max_replica_count=MAX_REPLICA_COUNT
     )
 
     print(f"Pipeline job completed with state: {job.state}")

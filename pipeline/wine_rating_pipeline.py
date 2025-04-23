@@ -36,7 +36,9 @@ def load_data(data_path: str, output_data: Output[Dataset]):
 def preprocess_data(input_data: Input[Dataset],
                     output_data: Output[Dataset],
                     train_data: Output[Dataset],
-                    test_data: Output[Dataset]):
+                    test_data: Output[Dataset],
+                    test_size: float = 0.2,
+                    random_state: int = 42):
     """Preprocesses the wine data for the prediction model."""
     import os
     import pandas as pd
@@ -67,7 +69,8 @@ def preprocess_data(input_data: Input[Dataset],
         df.loc[df['Rating'] > 5.0, 'Rating'] = 5.0
         print("⚠️ Created synthetic Rating column based on price")
 
-    train_df, test_df = train_test_split(df, test_size=0.2, random_state=42)
+    train_df, test_df = train_test_split(
+        df, test_size=test_size, random_state=random_state)
     train_df.to_csv(train_data.path, index=False)
     test_df.to_csv(test_data.path, index=False)
     df.to_csv(output_data.path, index=False)
@@ -84,7 +87,9 @@ def preprocess_data(input_data: Input[Dataset],
            base_image="python:3.9")
 def train_model(
     train_data: Input[Dataset],
-    output_model: Output[Model]
+    output_model: Output[Model],
+    n_estimators: int = 100,
+    random_state: int = 42
 ):
     """Trains a wine rating prediction model using RandomForestRegressor."""
     import os
@@ -119,7 +124,8 @@ def train_model(
     )
     model_pipeline = Pipeline(steps=[
         ('preprocessor', preprocessor),
-        ('model', RandomForestRegressor(n_estimators=100, random_state=42))
+        ('model', RandomForestRegressor(
+            n_estimators=n_estimators, random_state=random_state))
     ])
 
     X = df[feature_order].values
@@ -234,9 +240,9 @@ def register_model(
     model_artifact: Input[Model],
     registered_model: Output[Model],
     model_display_name: str,
-    serving_container_image_uri: str = "europe-docker.pkg.dev/vertex-ai/prediction/sklearn-cpu.1-0:latest",
-    project: str = "dev2-ea8f",
-    region: str = "europe-west2",
+    serving_container_image_uri: str,
+    project: str,
+    region: str,
 ):
     """Registers the wine rating model to Vertex AI Model Registry."""
     from google.cloud import aiplatform
@@ -269,8 +275,11 @@ def deploy_to_vertex_endpoint(
     model_registry_name: Input[Model],
     endpoint: Output[Model],
     endpoint_display_name: str,
-    project: str = "dev2-ea8f",
-    region: str = "europe-west2"
+    project: str,
+    region: str,
+    machine_type: str,
+    min_replica_count: int,
+    max_replica_count: int
 ):
     """Deploys a model to Vertex AI Endpoint."""
     from google.cloud import aiplatform
@@ -314,9 +323,9 @@ def deploy_to_vertex_endpoint(
         endpoint_to_use.deploy(
             model=model,
             deployed_model_display_name=deployed_model_display_name,
-            machine_type="n1-standard-2",
-            min_replica_count=1,
-            max_replica_count=1,
+            machine_type=machine_type,
+            min_replica_count=min_replica_count,
+            max_replica_count=max_replica_count,
             traffic_split={"0": 100}
         )
 
@@ -337,19 +346,30 @@ def deploy_to_vertex_endpoint(
 # wine pipeline
 def wine_pipeline(
     data_path: str,
-    model_display_name: str = "wine-rating-model",
-    endpoint_display_name: str = "wine-rating-endpoint",
-    project: str = "dev2-ea8f",
-    region: str = "europe-west2",
+    model_display_name: str,
+    endpoint_display_name: str,
+    project: str,
+    region: str,
     evaluation_threshold: float = 0.6,
+    test_size: float = 0.2,
+    random_state: int = 42,
+    n_estimators: int = 100,
+    serving_container_image_uri: str = "europe-docker.pkg.dev/vertex-ai/prediction/sklearn-cpu.1-0:latest",
+    machine_type: str = "n1-standard-2",
+    min_replica_count: int = 1,
+    max_replica_count: int = 1
 ):
 
     load_task = load_data(data_path=data_path)
     preprocess_task = preprocess_data(
-        input_data=load_task.outputs["output_data"]
+        input_data=load_task.outputs["output_data"],
+        test_size=test_size,
+        random_state=random_state
     )
     train_task = train_model(
-        train_data=preprocess_task.outputs["train_data"]
+        train_data=preprocess_task.outputs["train_data"],
+        n_estimators=n_estimators,
+        random_state=random_state
     )
     evaluate_task = evaluate_model(
         model_artifact=train_task.outputs["output_model"],
@@ -366,6 +386,7 @@ def wine_pipeline(
         register_task = register_model(
             model_artifact=upload_task.outputs["uploaded_model_artifact"],
             model_display_name=model_display_name,
+            serving_container_image_uri=serving_container_image_uri,
             project=project,
             region=region
         )
@@ -373,7 +394,10 @@ def wine_pipeline(
             model_registry_name=register_task.outputs["registered_model"],
             endpoint_display_name=endpoint_display_name,
             project=project,
-            region=region
+            region=region,
+            machine_type=machine_type,
+            min_replica_count=min_replica_count,
+            max_replica_count=max_replica_count
         )
 
 
