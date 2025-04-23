@@ -4,7 +4,8 @@ resource "google_project_service" "enable_services" {
     "cloudbuild.googleapis.com",
     "storage.googleapis.com",
     "artifactregistry.googleapis.com",
-    "compute.googleapis.com"
+    "compute.googleapis.com",
+    "notebooks.googleapis.com"
   ])
   service = each.key
 }
