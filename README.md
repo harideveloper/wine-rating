@@ -1,160 +1,179 @@
-# 🍷 Wine Rating Prediction System
+# Wine Recommendation System
 
-This project implements an end-to-end machine learning pipeline for **wine rating prediction** using **Google Cloud Vertex AI**. It includes data preprocessing, model training, evaluation, deployment, and batch prediction capabilities.
+A machine learning system for wine recommendations built on Google Cloud Vertex AI.
 
----
+## Overview
 
-## 📁 Project Structure
+This project implements a content-based wine recommendation system using Vertex AI Pipelines. It takes a CSV of wine data, processes it, and builds a recommendation model that can suggest similar wines based on characteristics like region, type, vintage, and flavor profile.
 
-```
-wine-recommendation-system/
-│
-├── pipeline/                      # ML pipeline components
-│   ├── wine_rating_pipeline.py    # Main pipeline definition
-│   └── run_wine_rating_pipeline.py # Script to trigger the pipeline
-│
-├── notebooks/                     # Jupyter notebooks for EDA
-│   └── wine_rating_eda.ipynb      
-│
-├── dataset/                       
-│   ├── raw/                       # Raw wine datasets
-│   └── batch/                     # Batch prediction input/output
-│
-├── test/                          
-│   ├── test_endpoint.py           # Python script to test endpoints
-│   ├── test_endpoint.sh           # Shell script for endpoint testing
-│   └── sample.json                # Sample prediction request
-│
-├── wine_venv/                     # Python virtual environment
-├── .gitignore                     # Files to ignore in version control
-└── Makefile                       # Automation scripts
-```
+### Features
 
----
+- **End-to-End ML Pipeline**: Complete Vertex AI pipeline for data loading, preprocessing, training, evaluation, and deployment
+- **Content-based Filtering**: Recommendations based on wine characteristics using cosine similarity
+- **Web Interface**: User-friendly Streamlit app for interacting with recommendations
+- **Automatic Deployment**: Seamless deployment to Vertex AI endpoints for production serving
 
-## ⚙️ Setup and Installation
+## Architecture
+
+The system consists of two main components:
+
+1. **Vertex AI Pipeline**: Handles the entire ML workflow from data to deployment
+2. **Streamlit Frontend**: Provides a web interface for users to interact with the recommendation system
+
+### Pipeline Steps
+
+1. **Data Loading**: Loads wine data from Google Cloud Storage
+2. **Data Preprocessing**: Cleans data and extracts features from wine characteristics
+3. **Model Training**: Trains a RandomForest regression model to predict wine ratings
+4. **Model Evaluation**: Evaluates the model performance using metrics like RMSE and R²
+5. **Model Registration**: Registers the model in Vertex AI Model Registry if it meets quality thresholds
+6. **Model Deployment**: Deploys the model to a Vertex AI endpoint for real-time predictions
+
+
+## Getting Started
 
 ### Prerequisites
 
-- Python 3.9 or higher  
-- Google Cloud SDK installed  
-- GCP project with Vertex AI enabled  
+- Google Cloud Platform account
+- Vertex AI API enabled
+- Google Cloud Storage bucket
+- Python 3.9+
 
-### Environment Setup
+### Installation
 
-```bash
-# Create Python virtual environment
-python -m venv wine_venv
+1. Clone this repository:
+   ```bash
+   git clone https://github.com/yourusername/wine-recommendation-system.git
+   cd wine-recommendation-system
+   ```
 
-# Activate the environment
-source wine_venv/bin/activate  # On Windows: wine_venv\Scripts\activate
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-# Install dependencies
-pip install -r requirements.txt
-```
+3. Set up Google Cloud credentials:
+   ```bash
+   gcloud auth application-default login
+   ```
 
----
+### Data Preparation
 
-## 🚀 Using the Pipeline
+Your wine dataset should be stored in Cloud Storage with the following recommended columns:
+
+- **Title**: Wine name
+- **Description**: Wine description text
+- **Price**: Price of the wine
+- **Capacity**: Bottle size
+- **Grape**: Primary grape variety
+- **Country**: Country of origin
+- **Type**: Wine type (Red, White, Rosé)
+- **ABV**: Alcohol content
+- **Region**: Wine region
+- **Style**: Wine style
+- **Vintage**: Year of production
 
 ### Running the Pipeline
 
-```bash
-cd pipeline
-python run_wine_rating_pipeline.py
-```
-
-This will:
-- Load and preprocess the wine data
-- Train a RandomForest regression model
-- Evaluate model performance
-
-If the model meets the evaluation threshold, it will be:
-- Registered in Vertex AI Model Registry  
-- Deployed to an endpoint  
-- Used for batch prediction  
-
----
-
-## 🔍 Testing the Endpoint
+You can run the pipeline using the provided deployment script:
 
 ```bash
-cd test
-./test_endpoint.sh
+python pipeline/run_pipeline.py \
+  --project-id=your-gcp-project-id \
+  --bucket=your-gcs-bucket \
+  --data-file=dataset/wine_v1.csv
 ```
 
-Or use Python:
+Or using the Python API:
+
+```python
+from wine_recommendation_pipeline import run_pipeline
+
+job = run_pipeline(
+    project_id="your-project-id",
+    gcs_bucket="your-gcs-bucket",
+    data_path="gs://your-gcs-bucket/dataset/wine_v1.csv"
+)
+```
+
+### Frontend App (To be Added)
 
 ```bash
-python test/test_endpoint.py
+cd app
+python3 app.py
 ```
 
----
+## Project Structure
 
-## 📊 Wine Data Analysis
-
-See `notebooks/wine_rating_eda.ipynb` for exploratory data analysis including:
-- Wine rating distributions  
-- Price vs Rating trends  
-- Country and region insights  
-- Grape variety comparisons  
-- Style-based recommendations  
-
----
-
-## 🧠 Model Details
-
-- **Algorithm**: RandomForest Regressor  
-- **Features**: Country, Region, Type, Style, Grape, price_numeric  
-- **Output**: Predicted wine rating (1 to 5)  
-- **Deployment**: Vertex AI endpoint  
-
----
-
-## 💡 Style-Based Recommendations
-
-This system also supports **style matching** to recommend wines similar to a user's preferred style.
-
----
-
-## 👩‍💻 For Developers
-
-### Adding New Features
-
-1. Add your components in `wine_rating_pipeline.py`  
-2. Modify the pipeline definition to include them  
-3. Test everything before deployment  
-
-### Data Format for Prediction
-
-Expected JSON input:
-
-```json
-{
-  "instances": [
-    [price_numeric, "Country", "Region", "Type", "Style", "Grape"]
-  ]
-}
+```
+wine-rating/
+│
+├── dataset/
+│   ├── batch                           
+│   └── raw               
+│        └── wine_v1.csv
+│
+├── pipeline/
+│   ├── wine_rating_pipeline.py 
+│   └── run_pipeline.py               
+│
+├── app/
+│   ├── app.py                           
+│   └── requirements.txt                 
+│
+├── notebooks/
+│   └── eda.ipynb         
+│
+├── scripts/
+│   └── setup_environment.sh             
+│
+├── infra/
+│   └── main.tf
+│   └── iam.tf
+│   └── vertexai.tf
+│   └── provider.tf
+│   └── variables.tf
+│   └── terraform.tfvars
+|
+├── Makefile                            
+├── requirements.txt                     
+└── README.md                            
 ```
 
-Example:
+## Using the Makefile
 
-```json
-{
-  "instances": [
-    [15.99, "France", "Burgundy", "White", "Rich & Toasty", "Chardonnay"]
-  ]
-}
+The project includes a Makefile for common operations:
+
+```bash
+# Set up the environment
+make setup
+
+# Compile the pipeline
+make pipeline
+
+# Deploy the pipeline
+PROJECT_ID=your-project-id BUCKET_NAME=your-bucket make deploy
+
+# Run the frontend
+make app
 ```
 
----
+## Development
 
-## 🛠 Troubleshooting
+To contribute to this project:
 
-- Make sure the prediction request format is correct  
-- Verify model deployment status in Vertex AI Console  
-- Double-check your GCP project and region configuration  
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Make your changes and commit: `git commit -m 'Add amazing feature'`
+4. Push to the branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
 
-📑 Check the logs in the Vertex AI console for more information or contact project maintainers for help.
+## License
 
----
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- Vertex AI documentation and examples
+- Streamlit for the frontend framework
+- Scikit-learn for machine learning utilities
