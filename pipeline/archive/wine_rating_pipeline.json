@@ -1,0 +1,759 @@
+{
+  "components": {
+    "comp-batch-prediction": {
+      "executorLabel": "exec-batch-prediction",
+      "inputDefinitions": {
+        "artifacts": {
+          "model_registry_name": {
+            "artifactType": {
+              "schemaTitle": "system.Model",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        },
+        "parameters": {
+          "input_data_gcs_path": {
+            "parameterType": "STRING"
+          },
+          "job_display_name": {
+            "parameterType": "STRING"
+          },
+          "machine_type": {
+            "defaultValue": "n1-standard-4",
+            "isOptional": true,
+            "parameterType": "STRING"
+          },
+          "output_data_gcs_path": {
+            "parameterType": "STRING"
+          },
+          "project": {
+            "parameterType": "STRING"
+          },
+          "region": {
+            "parameterType": "STRING"
+          }
+        }
+      },
+      "outputDefinitions": {
+        "artifacts": {
+          "batch_job_output": {
+            "artifactType": {
+              "schemaTitle": "system.Artifact",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        }
+      }
+    },
+    "comp-condition-1": {
+      "dag": {
+        "tasks": {
+          "batch-prediction": {
+            "cachingOptions": {
+              "enableCache": true
+            },
+            "componentRef": {
+              "name": "comp-batch-prediction"
+            },
+            "dependentTasks": [
+              "register-model"
+            ],
+            "inputs": {
+              "artifacts": {
+                "model_registry_name": {
+                  "taskOutputArtifact": {
+                    "outputArtifactKey": "registered_model",
+                    "producerTask": "register-model"
+                  }
+                }
+              },
+              "parameters": {
+                "input_data_gcs_path": {
+                  "runtimeValue": {
+                    "constant": "gs://model-output-wine-dev2-ea8f/batch.jsonl"
+                  }
+                },
+                "job_display_name": {
+                  "componentInputParameter": "pipelinechannel--model_display_name"
+                },
+                "machine_type": {
+                  "componentInputParameter": "pipelinechannel--machine_type"
+                },
+                "output_data_gcs_path": {
+                  "runtimeValue": {
+                    "constant": "gs://model-output-wine-dev2-ea8f"
+                  }
+                },
+                "project": {
+                  "componentInputParameter": "pipelinechannel--project"
+                },
+                "region": {
+                  "componentInputParameter": "pipelinechannel--region"
+                }
+              }
+            },
+            "taskInfo": {
+              "name": "batch-prediction"
+            }
+          },
+          "register-model": {
+            "cachingOptions": {
+              "enableCache": true
+            },
+            "componentRef": {
+              "name": "comp-register-model"
+            },
+            "dependentTasks": [
+              "upload-model"
+            ],
+            "inputs": {
+              "artifacts": {
+                "model_artifact": {
+                  "taskOutputArtifact": {
+                    "outputArtifactKey": "uploaded_model_artifact",
+                    "producerTask": "upload-model"
+                  }
+                }
+              },
+              "parameters": {
+                "model_display_name": {
+                  "componentInputParameter": "pipelinechannel--model_display_name"
+                },
+                "project": {
+                  "componentInputParameter": "pipelinechannel--project"
+                },
+                "region": {
+                  "componentInputParameter": "pipelinechannel--region"
+                },
+                "serving_container_image_uri": {
+                  "componentInputParameter": "pipelinechannel--serving_container_image_uri"
+                }
+              }
+            },
+            "taskInfo": {
+              "name": "register-model"
+            }
+          },
+          "upload-model": {
+            "cachingOptions": {
+              "enableCache": true
+            },
+            "componentRef": {
+              "name": "comp-upload-model"
+            },
+            "inputs": {
+              "artifacts": {
+                "model_artifact": {
+                  "componentInputArtifact": "pipelinechannel--train-model-output_model"
+                }
+              }
+            },
+            "taskInfo": {
+              "name": "upload-model"
+            }
+          }
+        }
+      },
+      "inputDefinitions": {
+        "artifacts": {
+          "pipelinechannel--train-model-output_model": {
+            "artifactType": {
+              "schemaTitle": "system.Model",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        },
+        "parameters": {
+          "pipelinechannel--evaluate-model-Output": {
+            "parameterType": "NUMBER_DOUBLE"
+          },
+          "pipelinechannel--evaluation_threshold": {
+            "parameterType": "NUMBER_DOUBLE"
+          },
+          "pipelinechannel--machine_type": {
+            "parameterType": "STRING"
+          },
+          "pipelinechannel--model_display_name": {
+            "parameterType": "STRING"
+          },
+          "pipelinechannel--project": {
+            "parameterType": "STRING"
+          },
+          "pipelinechannel--region": {
+            "parameterType": "STRING"
+          },
+          "pipelinechannel--serving_container_image_uri": {
+            "parameterType": "STRING"
+          }
+        }
+      }
+    },
+    "comp-evaluate-model": {
+      "executorLabel": "exec-evaluate-model",
+      "inputDefinitions": {
+        "artifacts": {
+          "model_artifact": {
+            "artifactType": {
+              "schemaTitle": "system.Model",
+              "schemaVersion": "0.0.1"
+            }
+          },
+          "test_data": {
+            "artifactType": {
+              "schemaTitle": "system.Dataset",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        }
+      },
+      "outputDefinitions": {
+        "parameters": {
+          "Output": {
+            "parameterType": "NUMBER_DOUBLE"
+          }
+        }
+      }
+    },
+    "comp-load-data": {
+      "executorLabel": "exec-load-data",
+      "inputDefinitions": {
+        "parameters": {
+          "data_path": {
+            "parameterType": "STRING"
+          }
+        }
+      },
+      "outputDefinitions": {
+        "artifacts": {
+          "output_data": {
+            "artifactType": {
+              "schemaTitle": "system.Dataset",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        }
+      }
+    },
+    "comp-preprocess-data": {
+      "executorLabel": "exec-preprocess-data",
+      "inputDefinitions": {
+        "artifacts": {
+          "input_data": {
+            "artifactType": {
+              "schemaTitle": "system.Dataset",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        },
+        "parameters": {
+          "random_state": {
+            "defaultValue": 42.0,
+            "isOptional": true,
+            "parameterType": "NUMBER_INTEGER"
+          },
+          "test_size": {
+            "defaultValue": 0.2,
+            "isOptional": true,
+            "parameterType": "NUMBER_DOUBLE"
+          }
+        }
+      },
+      "outputDefinitions": {
+        "artifacts": {
+          "output_data": {
+            "artifactType": {
+              "schemaTitle": "system.Dataset",
+              "schemaVersion": "0.0.1"
+            }
+          },
+          "test_data": {
+            "artifactType": {
+              "schemaTitle": "system.Dataset",
+              "schemaVersion": "0.0.1"
+            }
+          },
+          "train_data": {
+            "artifactType": {
+              "schemaTitle": "system.Dataset",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        }
+      }
+    },
+    "comp-register-model": {
+      "executorLabel": "exec-register-model",
+      "inputDefinitions": {
+        "artifacts": {
+          "model_artifact": {
+            "artifactType": {
+              "schemaTitle": "system.Model",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        },
+        "parameters": {
+          "model_display_name": {
+            "parameterType": "STRING"
+          },
+          "project": {
+            "parameterType": "STRING"
+          },
+          "region": {
+            "parameterType": "STRING"
+          },
+          "serving_container_image_uri": {
+            "parameterType": "STRING"
+          }
+        }
+      },
+      "outputDefinitions": {
+        "artifacts": {
+          "registered_model": {
+            "artifactType": {
+              "schemaTitle": "system.Model",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        }
+      }
+    },
+    "comp-train-model": {
+      "executorLabel": "exec-train-model",
+      "inputDefinitions": {
+        "artifacts": {
+          "train_data": {
+            "artifactType": {
+              "schemaTitle": "system.Dataset",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        },
+        "parameters": {
+          "n_estimators": {
+            "defaultValue": 100.0,
+            "isOptional": true,
+            "parameterType": "NUMBER_INTEGER"
+          },
+          "random_state": {
+            "defaultValue": 42.0,
+            "isOptional": true,
+            "parameterType": "NUMBER_INTEGER"
+          }
+        }
+      },
+      "outputDefinitions": {
+        "artifacts": {
+          "output_model": {
+            "artifactType": {
+              "schemaTitle": "system.Model",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        }
+      }
+    },
+    "comp-upload-model": {
+      "executorLabel": "exec-upload-model",
+      "inputDefinitions": {
+        "artifacts": {
+          "model_artifact": {
+            "artifactType": {
+              "schemaTitle": "system.Model",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        }
+      },
+      "outputDefinitions": {
+        "artifacts": {
+          "uploaded_model_artifact": {
+            "artifactType": {
+              "schemaTitle": "system.Model",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        }
+      }
+    }
+  },
+  "deploymentSpec": {
+    "executors": {
+      "exec-batch-prediction": {
+        "container": {
+          "args": [
+            "--executor_input",
+            "{{$}}",
+            "--function_to_execute",
+            "batch_prediction"
+          ],
+          "command": [
+            "sh",
+            "-c",
+            "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'kfp==2.12.1' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&  python3 -m pip install --quiet --no-warn-script-location 'google-cloud-aiplatform>=1.22.1' && \"$0\" \"$@\"\n",
+            "sh",
+            "-ec",
+            "program_path=$(mktemp -d)\n\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+            "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef batch_prediction(\n    model_registry_name: Input[Model],\n    batch_job_output: Output[Artifact],\n    job_display_name: str,\n    input_data_gcs_path: str,  # Path to batch_data.json\n    output_data_gcs_path: str,  # Where to save predictions\n    project: str,\n    region: str,\n    machine_type: str = \"n1-standard-4\"\n):\n    \"\"\"Simple batch prediction job.\"\"\"\n    from google.cloud import aiplatform\n\n    aiplatform.init(project=project, location=region)\n\n    # Get the registered model\n    model_name = model_registry_name.metadata.get(\"resource_name\")\n    if not model_name:\n        raise ValueError(\"Model resource_name is missing from metadata.\")\n\n    print(f\"\u2705 Using model: {model_name}\")\n    print(f\"\u2705 Input JSON: {input_data_gcs_path}\")\n    print(f\"\u2705 Output path: {output_data_gcs_path}\")\n\n    try:\n        model = aiplatform.Model(model_name)\n        print(f\"\u2705 Retrieved model: {model.resource_name}\")\n\n        # Create batch prediction job\n        batch_prediction_job = model.batch_predict(\n            job_display_name=job_display_name,\n            gcs_source=input_data_gcs_path,\n            gcs_destination_prefix=output_data_gcs_path,\n            machine_type=machine_type,\n            sync=True\n        )\n\n        print(f\"\u2705 Batch prediction completed: {batch_prediction_job.resource_name}\")\n\n        batch_job_output.uri = batch_prediction_job.resource_name\n        batch_job_output.metadata[\"job_name\"] = batch_prediction_job.resource_name\n        batch_job_output.metadata[\"output_path\"] = output_data_gcs_path\n\n    except Exception as e:\n        print(f\"\u274c Batch prediction error: {e}\")\n        raise e\n\n"
+          ],
+          "image": "python:3.9"
+        }
+      },
+      "exec-evaluate-model": {
+        "container": {
+          "args": [
+            "--executor_input",
+            "{{$}}",
+            "--function_to_execute",
+            "evaluate_model"
+          ],
+          "command": [
+            "sh",
+            "-c",
+            "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'kfp==2.12.1' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&  python3 -m pip install --quiet --no-warn-script-location 'pandas==1.5.3' 'numpy==1.23.5' 'scikit-learn==1.0.1' && \"$0\" \"$@\"\n",
+            "sh",
+            "-ec",
+            "program_path=$(mktemp -d)\n\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+            "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef evaluate_model(\n    model_artifact: Input[Model],\n    test_data: Input[Dataset]\n) -> float:\n    \"\"\"Evaluates the wine rating prediction model.\"\"\"\n    import os\n    import pickle\n    import pandas as pd\n    import numpy as np\n    from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error\n\n    model_path = model_artifact.path + \".pkl\"\n    print(f\"Loading model from: {model_path}\")\n\n    try:\n        with open(model_path, 'rb') as file:\n            model = pickle.load(file)\n        print(\"\u2705 Model loaded successfully\")\n    except Exception as e:\n        print(f\"\u274c Error loading model: {e}\")\n        raise\n\n    test_df = pd.read_csv(test_data.path)\n    print(f\"\u2705 Loaded test data with shape: {test_df.shape}\")\n\n    features_str = model_artifact.metadata.get(\"features\", \"\")\n    if features_str:\n        import ast\n        features = ast.literal_eval(features_str)\n    else:\n        categorical_features = ['Country', 'Region', 'Type', 'Style', 'Grape']\n        categorical_features = [\n            col for col in categorical_features if col in test_df.columns]\n        numeric_features = ['price_numeric']\n        numeric_features = [\n            col for col in numeric_features if col in test_df.columns]\n        features = numeric_features + categorical_features\n\n    target = model_artifact.metadata.get(\"target\", \"Rating\")\n\n    # predictions\n    X_test = test_df[features]\n    y_test = test_df[target]\n\n    y_pred = model.predict(X_test)\n\n    # metrics\n    mse = mean_squared_error(y_test, y_pred)\n    rmse = np.sqrt(mse)\n    mae = mean_absolute_error(y_test, y_pred)\n    r2 = r2_score(y_test, y_pred)\n\n    print(f\"\u2705 Model Evaluation Results:\")\n    print(f\"   RMSE: {rmse:.4f}\")\n    print(f\"   MAE: {mae:.4f}\")\n    print(f\"   R\u00b2: {r2:.4f}\")\n\n    # Calculate a quality score (higher = better)\n    r2_norm = max(0, r2)\n    rmse_score = max(0, 1.0 - rmse)\n    quality_score = (0.7 * r2_norm) + (0.3 * rmse_score)\n    print(f\"\u2705 Model quality score: {quality_score:.4f}\")\n\n    return quality_score\n\n"
+          ],
+          "image": "python:3.9"
+        }
+      },
+      "exec-load-data": {
+        "container": {
+          "args": [
+            "--executor_input",
+            "{{$}}",
+            "--function_to_execute",
+            "load_data"
+          ],
+          "command": [
+            "sh",
+            "-c",
+            "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'kfp==2.12.1' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&  python3 -m pip install --quiet --no-warn-script-location 'pandas==1.5.3' 'numpy==1.23.5' 'gcsfs==2025.3.2' && \"$0\" \"$@\"\n",
+            "sh",
+            "-ec",
+            "program_path=$(mktemp -d)\n\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+            "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef load_data(data_path: str, output_data: Output[Dataset]):\n    \"\"\"Loads wine data from a CSV file located in GCS.\"\"\"\n    import pandas as pd\n\n    def load_data_from_gcs(gcs_path: str) -> pd.DataFrame:\n        try:\n            df = pd.read_csv(gcs_path)\n            print(f\"\u2705 Loaded wine data from GCS with shape: {df.shape}\")\n            return df\n        except Exception as e:\n            raise FileNotFoundError(\n                f\"\u274c Failed to load GCS file: {gcs_path}. Error: {e}\")\n\n    df = load_data_from_gcs(data_path)\n\n    if 'id' not in df.columns:\n        df['id'] = range(1, len(df) + 1)\n\n    df.to_csv(output_data.path, index=False)\n    print(f\"\u2705 Wine data saved to {output_data.path}\")\n\n"
+          ],
+          "image": "python:3.9"
+        }
+      },
+      "exec-preprocess-data": {
+        "container": {
+          "args": [
+            "--executor_input",
+            "{{$}}",
+            "--function_to_execute",
+            "preprocess_data"
+          ],
+          "command": [
+            "sh",
+            "-c",
+            "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'kfp==2.12.1' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&  python3 -m pip install --quiet --no-warn-script-location 'pandas==1.5.3' 'numpy==1.23.5' 'scikit-learn==1.0.1' && \"$0\" \"$@\"\n",
+            "sh",
+            "-ec",
+            "program_path=$(mktemp -d)\n\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+            "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef preprocess_data(input_data: Input[Dataset],\n                    output_data: Output[Dataset],\n                    train_data: Output[Dataset],\n                    test_data: Output[Dataset],\n                    test_size: float = 0.2,\n                    random_state: int = 42):\n    \"\"\"Preprocesses the wine data for the prediction model.\"\"\"\n    import os\n    import pandas as pd\n    import re\n    from sklearn.model_selection import train_test_split\n\n    df = pd.read_csv(input_data.path)\n    print(f\"\u2705 Loaded input data with shape: {df.shape}\")\n\n    # Data cleanup ( handle missing columns & handle null price )\n    categorical_features = ['Country', 'Region', 'Type', 'Style', 'Grape']\n    for col in categorical_features:\n        if col in df.columns:\n            df[col] = df[col].fillna('Unknown')\n\n    if \"Price\" in df.columns:\n        df[\"price_numeric\"] = df[\"Price\"].apply(\n            lambda x: float(re.search(r'(\\d+\\.?\\d*)', str(x)).group(1))\n            if pd.notna(x) and re.search(r'\\d+\\.?\\d*', str(x))\n            else 0\n        )\n    else:\n        df[\"price_numeric\"] = 0\n\n    # target column (tating) for final prediction\n    if 'Rating' not in df.columns:\n        df['Rating'] = df['price_numeric'] * 0.2 + 3.0\n        df.loc[df['Rating'] > 5.0, 'Rating'] = 5.0\n        print(\"\u26a0\ufe0f Created synthetic Rating column based on price\")\n\n    train_df, test_df = train_test_split(\n        df, test_size=test_size, random_state=random_state)\n    train_df.to_csv(train_data.path, index=False)\n    test_df.to_csv(test_data.path, index=False)\n    df.to_csv(output_data.path, index=False)\n\n    print(\n        f\"\u2705 Preprocessed train data saved at {train_data.path} with shape {train_df.shape}\")\n    print(\n        f\"\u2705 Preprocessed test data saved at {test_data.path} with shape {test_df.shape}\")\n    print(f\"\u2705 Combined preprocessed data saved at {output_data.path}\")\n\n"
+          ],
+          "image": "python:3.9"
+        }
+      },
+      "exec-register-model": {
+        "container": {
+          "args": [
+            "--executor_input",
+            "{{$}}",
+            "--function_to_execute",
+            "register_model"
+          ],
+          "command": [
+            "sh",
+            "-c",
+            "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'kfp==2.12.1' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&  python3 -m pip install --quiet --no-warn-script-location 'google-cloud-aiplatform>=1.22.1' && \"$0\" \"$@\"\n",
+            "sh",
+            "-ec",
+            "program_path=$(mktemp -d)\n\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+            "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef register_model(\n    model_artifact: Input[Model],\n    registered_model: Output[Model],\n    model_display_name: str,\n    serving_container_image_uri: str,\n    project: str,\n    region: str,\n):\n    \"\"\"Registers the wine rating model to Vertex AI Model Registry.\"\"\"\n    from google.cloud import aiplatform\n\n    aiplatform.init(project=project, location=region)\n\n    try:\n        model = aiplatform.Model.upload(\n            display_name=model_display_name,\n            artifact_uri=model_artifact.uri,\n            serving_container_image_uri=serving_container_image_uri,\n        )\n        print(f\"\u2705 Model registered: {model.resource_name}\")\n        registered_model.uri = model.resource_name\n        registered_model.metadata[\"display_name\"] = model_display_name\n        registered_model.metadata[\"resource_name\"] = model.resource_name\n        for key, value in model_artifact.metadata.items():\n            if key not in registered_model.metadata:\n                registered_model.metadata[key] = value\n\n    except Exception as e:\n        print(f\"\u274c Error registering model: {e}\")\n        raise e\n\n"
+          ],
+          "image": "python:3.9"
+        }
+      },
+      "exec-train-model": {
+        "container": {
+          "args": [
+            "--executor_input",
+            "{{$}}",
+            "--function_to_execute",
+            "train_model"
+          ],
+          "command": [
+            "sh",
+            "-c",
+            "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'kfp==2.12.1' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&  python3 -m pip install --quiet --no-warn-script-location 'pandas==1.5.3' 'numpy==1.23.5' 'scikit-learn==1.0.1' && \"$0\" \"$@\"\n",
+            "sh",
+            "-ec",
+            "program_path=$(mktemp -d)\n\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+            "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef train_model(\n    train_data: Input[Dataset],\n    output_model: Output[Model],\n    n_estimators: int = 100,\n    random_state: int = 42\n):\n    \"\"\"Trains a wine rating prediction model using RandomForestRegressor.\"\"\"\n    import os\n    import pandas as pd\n    import numpy as np\n    import pickle\n    from sklearn.ensemble import RandomForestRegressor\n    from sklearn.preprocessing import OneHotEncoder, StandardScaler\n    from sklearn.compose import ColumnTransformer\n    from sklearn.pipeline import Pipeline\n\n    df = pd.read_csv(train_data.path)\n    print(f\"\u2705 Loaded training data with shape: {df.shape}\")\n\n    # features\n    categorical_features = ['Country', 'Region', 'Type', 'Style', 'Grape']\n    categorical_features = [\n        col for col in categorical_features if col in df.columns]\n\n    numeric_features = ['price_numeric']\n    numeric_features = [col for col in numeric_features if col in df.columns]\n    feature_order = numeric_features + categorical_features\n    target = 'Rating'\n    preprocessor = ColumnTransformer(\n        transformers=[\n            ('num', StandardScaler(), [i for i, col in enumerate(\n                feature_order) if col in numeric_features]),\n            ('cat', OneHotEncoder(handle_unknown='ignore'), [\n             i for i, col in enumerate(feature_order) if col in categorical_features])\n        ],\n        remainder='passthrough'\n    )\n    model_pipeline = Pipeline(steps=[\n        ('preprocessor', preprocessor),\n        ('model', RandomForestRegressor(\n            n_estimators=n_estimators, random_state=random_state))\n    ])\n\n    X = df[feature_order].values\n    y = df[target].values\n    model_pipeline.fit(X, y)\n    print(\"\u2705 Model trained successfully\")\n\n    file_name = output_model.path + \".pkl\"\n    with open(file_name, 'wb') as file:\n        pickle.dump(model_pipeline, file)\n    output_model.metadata[\"framework\"] = \"sklearn\"\n    output_model.metadata[\"feature_order\"] = str(feature_order)\n    output_model.metadata[\"target\"] = target\n\n    print(f\"\u2705 Model trained and saved to {file_name}\")\n\n"
+          ],
+          "image": "python:3.9"
+        }
+      },
+      "exec-upload-model": {
+        "container": {
+          "args": [
+            "--executor_input",
+            "{{$}}",
+            "--function_to_execute",
+            "upload_model"
+          ],
+          "command": [
+            "sh",
+            "-c",
+            "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'kfp==2.12.1' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&  python3 -m pip install --quiet --no-warn-script-location 'google-cloud-storage' && \"$0\" \"$@\"\n",
+            "sh",
+            "-ec",
+            "program_path=$(mktemp -d)\n\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+            "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef upload_model(model_artifact: Input[Model], uploaded_model_artifact: Output[Model]):\n    \"\"\"Uploads the wine rating model artifact.\"\"\"\n    import os\n    import shutil\n\n    model_dir = os.path.dirname(uploaded_model_artifact.path)\n    os.makedirs(model_dir, exist_ok=True)\n    model_file_path = os.path.join(model_dir, \"model.pkl\")\n    source_path = model_artifact.path + \".pkl\"\n    print(f\"Copying model from {source_path} to {model_file_path}\")\n    shutil.copy(source_path, model_file_path)\n    uploaded_model_artifact.uri = model_dir\n    uploaded_model_artifact.metadata.update(model_artifact.metadata)\n\n    print(f\"\u2705 Model uploaded to directory: {model_dir}\")\n    print(f\"\u2705 Model URI set to: {uploaded_model_artifact.uri}\")\n\n"
+          ],
+          "image": "python:3.9"
+        }
+      }
+    }
+  },
+  "pipelineInfo": {
+    "description": "End-to-end pipeline for training, evaluating and deploying a wine rating prediction model.",
+    "name": "wine-rating-prediction-pipeline"
+  },
+  "root": {
+    "dag": {
+      "tasks": {
+        "condition-1": {
+          "componentRef": {
+            "name": "comp-condition-1"
+          },
+          "dependentTasks": [
+            "evaluate-model",
+            "train-model"
+          ],
+          "inputs": {
+            "artifacts": {
+              "pipelinechannel--train-model-output_model": {
+                "taskOutputArtifact": {
+                  "outputArtifactKey": "output_model",
+                  "producerTask": "train-model"
+                }
+              }
+            },
+            "parameters": {
+              "pipelinechannel--evaluate-model-Output": {
+                "taskOutputParameter": {
+                  "outputParameterKey": "Output",
+                  "producerTask": "evaluate-model"
+                }
+              },
+              "pipelinechannel--evaluation_threshold": {
+                "componentInputParameter": "evaluation_threshold"
+              },
+              "pipelinechannel--machine_type": {
+                "componentInputParameter": "machine_type"
+              },
+              "pipelinechannel--model_display_name": {
+                "componentInputParameter": "model_display_name"
+              },
+              "pipelinechannel--project": {
+                "componentInputParameter": "project"
+              },
+              "pipelinechannel--region": {
+                "componentInputParameter": "region"
+              },
+              "pipelinechannel--serving_container_image_uri": {
+                "componentInputParameter": "serving_container_image_uri"
+              }
+            }
+          },
+          "taskInfo": {
+            "name": "model deployment"
+          },
+          "triggerPolicy": {
+            "condition": "inputs.parameter_values['pipelinechannel--evaluate-model-Output'] >= inputs.parameter_values['pipelinechannel--evaluation_threshold']"
+          }
+        },
+        "evaluate-model": {
+          "cachingOptions": {
+            "enableCache": true
+          },
+          "componentRef": {
+            "name": "comp-evaluate-model"
+          },
+          "dependentTasks": [
+            "preprocess-data",
+            "train-model"
+          ],
+          "inputs": {
+            "artifacts": {
+              "model_artifact": {
+                "taskOutputArtifact": {
+                  "outputArtifactKey": "output_model",
+                  "producerTask": "train-model"
+                }
+              },
+              "test_data": {
+                "taskOutputArtifact": {
+                  "outputArtifactKey": "test_data",
+                  "producerTask": "preprocess-data"
+                }
+              }
+            }
+          },
+          "taskInfo": {
+            "name": "evaluate-model"
+          }
+        },
+        "load-data": {
+          "cachingOptions": {
+            "enableCache": true
+          },
+          "componentRef": {
+            "name": "comp-load-data"
+          },
+          "inputs": {
+            "parameters": {
+              "data_path": {
+                "componentInputParameter": "data_path"
+              }
+            }
+          },
+          "taskInfo": {
+            "name": "load-data"
+          }
+        },
+        "preprocess-data": {
+          "cachingOptions": {
+            "enableCache": true
+          },
+          "componentRef": {
+            "name": "comp-preprocess-data"
+          },
+          "dependentTasks": [
+            "load-data"
+          ],
+          "inputs": {
+            "artifacts": {
+              "input_data": {
+                "taskOutputArtifact": {
+                  "outputArtifactKey": "output_data",
+                  "producerTask": "load-data"
+                }
+              }
+            },
+            "parameters": {
+              "random_state": {
+                "componentInputParameter": "random_state"
+              },
+              "test_size": {
+                "componentInputParameter": "test_size"
+              }
+            }
+          },
+          "taskInfo": {
+            "name": "preprocess-data"
+          }
+        },
+        "train-model": {
+          "cachingOptions": {
+            "enableCache": true
+          },
+          "componentRef": {
+            "name": "comp-train-model"
+          },
+          "dependentTasks": [
+            "preprocess-data"
+          ],
+          "inputs": {
+            "artifacts": {
+              "train_data": {
+                "taskOutputArtifact": {
+                  "outputArtifactKey": "train_data",
+                  "producerTask": "preprocess-data"
+                }
+              }
+            },
+            "parameters": {
+              "n_estimators": {
+                "componentInputParameter": "n_estimators"
+              },
+              "random_state": {
+                "componentInputParameter": "random_state"
+              }
+            }
+          },
+          "taskInfo": {
+            "name": "train-model"
+          }
+        }
+      }
+    },
+    "inputDefinitions": {
+      "parameters": {
+        "data_path": {
+          "parameterType": "STRING"
+        },
+        "endpoint_display_name": {
+          "parameterType": "STRING"
+        },
+        "evaluation_threshold": {
+          "defaultValue": 0.6,
+          "isOptional": true,
+          "parameterType": "NUMBER_DOUBLE"
+        },
+        "machine_type": {
+          "defaultValue": "n1-standard-2",
+          "isOptional": true,
+          "parameterType": "STRING"
+        },
+        "max_replica_count": {
+          "defaultValue": 1.0,
+          "isOptional": true,
+          "parameterType": "NUMBER_INTEGER"
+        },
+        "min_replica_count": {
+          "defaultValue": 1.0,
+          "isOptional": true,
+          "parameterType": "NUMBER_INTEGER"
+        },
+        "model_display_name": {
+          "parameterType": "STRING"
+        },
+        "n_estimators": {
+          "defaultValue": 100.0,
+          "isOptional": true,
+          "parameterType": "NUMBER_INTEGER"
+        },
+        "project": {
+          "parameterType": "STRING"
+        },
+        "random_state": {
+          "defaultValue": 42.0,
+          "isOptional": true,
+          "parameterType": "NUMBER_INTEGER"
+        },
+        "region": {
+          "parameterType": "STRING"
+        },
+        "serving_container_image_uri": {
+          "defaultValue": "europe-docker.pkg.dev/vertex-ai/prediction/sklearn-cpu.1-0:latest",
+          "isOptional": true,
+          "parameterType": "STRING"
+        },
+        "test_size": {
+          "defaultValue": 0.2,
+          "isOptional": true,
+          "parameterType": "NUMBER_DOUBLE"
+        }
+      }
+    }
+  },
+  "schemaVersion": "2.1.0",
+  "sdkVersion": "kfp-2.12.1"
+}

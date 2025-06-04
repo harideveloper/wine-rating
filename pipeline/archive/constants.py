@@ -24,9 +24,13 @@ EVALUATION_THRESHOLD = 0.6
 TEST_SIZE = 0.2
 RANDOM_STATE = 42
 N_ESTIMATORS = 100
-SERVING_CONTAINER_IMAGE_URI = "europe-docker.pkg.dev/vertex-ai/prediction/sklearn-cpu.1-0:latest"
+SERVING_CONTAINER_IMAGE_URI = "europe-docker.pkg.dev/vertex-ai/prediction/sklearn-cpu.0-24:latest"
 
 # Deployment configuration
 MACHINE_TYPE = "n1-standard-2"
 MIN_REPLICA_COUNT = 1
 MAX_REPLICA_COUNT = 1
+
+BATCH_INPUT_PATH = f"gs://{GCS_BUCKET}/batch.jsonl"
+BATCH_OUTPUT_PATH = f"gs://{GCS_BUCKET}/predictions/"
+PIPELINE_ROOT = f"gs://{GCS_BUCKET}/pipeline_root"

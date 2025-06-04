@@ -8,12 +8,12 @@ resource "google_storage_bucket" "modelbuild" {
   depends_on = [google_project_service.enable_services]
 }
 
+resource "google_storage_bucket" "codebuild" {
+  name                        = "workbench-code-${var.application}-${var.project_id}"
+  location                    = var.region
+  force_destroy               = true
+  storage_class               = "REGIONAL"
+  uniform_bucket_level_access = true
 
-# Create a GCS bucket for code storage
-resource "google_storage_bucket" "code_bucket" {
-  name          = "${var.project_id}-workbench-code"
-  location      = var.region
-  force_destroy = true
-  depends_on    = [google_project_service.storage_api]
+  depends_on = [google_project_service.enable_services]
 }
-

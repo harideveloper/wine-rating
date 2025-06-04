@@ -338,6 +338,104 @@ def deploy_to_vertex_endpoint(
             endpoint.uri = endpoint_to_use.resource_name
         raise e
 
+@component(packages_to_install=["google-cloud-aiplatform>=1.22.1"],
+           base_image="python:3.9")
+def batch_prediction(
+    model_registry_name: Input[Model],
+    batch_job_output: Output[Artifact],
+    job_display_name: str,
+    input_data_gcs_path: str,  # Path to batch_data.json
+    output_data_gcs_path: str,  # Where to save predictions
+    project: str,
+    region: str,
+    machine_type: str = "n1-standard-4"
+):
+    """Simple batch prediction job."""
+    from google.cloud import aiplatform
+    
+    aiplatform.init(project=project, location=region)
+    
+    # Get the registered model
+    model_name = model_registry_name.metadata.get("resource_name")
+    if not model_name:
+        raise ValueError("Model resource_name is missing from metadata.")
+    
+    print(f"✅ Using model: {model_name}")
+    print(f"✅ Input JSON: {input_data_gcs_path}")
+    print(f"✅ Output path: {output_data_gcs_path}")
+    
+    try:
+        model = aiplatform.Model(model_name)
+        print(f"✅ Retrieved model: {model.resource_name}")
+        
+        # Create batch prediction job
+        batch_prediction_job = model.batch_predict(
+            job_display_name=job_display_name,
+            gcs_source=input_data_gcs_path,
+            gcs_destination_prefix=output_data_gcs_path,
+            machine_type=machine_type,
+            sync=True
+        )
+        
+        print(f"✅ Batch prediction completed: {batch_prediction_job.resource_name}")
+        
+        batch_job_output.uri = batch_prediction_job.resource_name
+        batch_job_output.metadata["job_name"] = batch_prediction_job.resource_name
+        batch_job_output.metadata["output_path"] = output_data_gcs_path
+        
+    except Exception as e:
+        print(f"❌ Batch prediction error: {e}")
+        raise e
+    
+# @component(packages_to_install=["google-cloud-aiplatform>=1.22.1"],
+#            base_image="python:3.9")
+# def batch_prediction(
+#     model_registry_name: Input[Model],
+#     batch_job_output: Output[Artifact],
+#     job_display_name: str,
+#     input_data_gcs_path: str,  # Path to your input data for prediction
+#     output_data_gcs_path: str,  # Where to save predictions
+#     project: str,
+#     region: str,
+#     machine_type: str
+# ):
+#     """Creates a batch prediction job instead of online endpoint."""
+#     from google.cloud import aiplatform
+    
+#     aiplatform.init(project=project, location=region)
+    
+#     # Get the registered model
+#     model_name = model_registry_name.metadata.get("resource_name")
+#     if not model_name:
+#         raise ValueError("Model resource_name is missing from metadata.")
+    
+#     try:
+#         model = aiplatform.Model(model_name)
+#         print(f"✅ Retrieved model: {model.resource_name}")
+        
+#         # Create batch prediction job
+#         batch_prediction_job = model.batch_predict(
+#             job_display_name=job_display_name,
+#             gcs_source=[input_data_gcs_path],  # Input data
+#             gcs_destination_prefix=output_data_gcs_path,  # Output location
+#             machine_type=machine_type,
+#             sync=True  # Wait for completion
+#         )
+        
+#         print(f"✅ Batch prediction job completed: {batch_prediction_job.resource_name}")
+#         print(f"✅ Predictions saved to: {output_data_gcs_path}")
+        
+#         batch_job_output.uri = batch_prediction_job.resource_name
+#         batch_job_output.metadata["job_name"] = batch_prediction_job.resource_name
+#         batch_job_output.metadata["output_path"] = output_data_gcs_path
+        
+#     except Exception as e:
+#         print(f"❌ Batch prediction error: {e}")
+#         raise e
+
+
+
+
 
 @dsl.pipeline(
     name="wine-rating-prediction-pipeline",
@@ -390,14 +488,24 @@ def wine_pipeline(
             project=project,
             region=region
         )
-        deploy_task = deploy_to_vertex_endpoint(
+        # deploy_task = deploy_to_vertex_endpoint(
+        #     model_registry_name=register_task.outputs["registered_model"],
+        #     endpoint_display_name=endpoint_display_name,
+        #     project=project,
+        #     region=region,
+        #     machine_type=machine_type,
+        #     min_replica_count=min_replica_count,
+        #     max_replica_count=max_replica_count
+        # )
+
+        batch_predict_task = batch_prediction(
             model_registry_name=register_task.outputs["registered_model"],
-            endpoint_display_name=endpoint_display_name,
+            job_display_name=model_display_name,
+            input_data_gcs_path="gs://model-output-wine-dev2-ea8f/batch.jsonl",
+            output_data_gcs_path="gs://model-output-wine-dev2-ea8f",
             project=project,
             region=region,
-            machine_type=machine_type,
-            min_replica_count=min_replica_count,
-            max_replica_count=max_replica_count
+            machine_type=machine_type
         )
 
 

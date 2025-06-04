@@ -27,7 +27,7 @@ eda:
 # Run the pipeline
 .PHONY: run-pipeline
 run-pipeline:
-	cd pipeline && ../$(VENV_NAME)/bin/python run_pipeline.py
+	cd pipeline && ../$(VENV_NAME)/bin/python run_rating_prediction_pipeline.py
 
 # Test the endpoint
 .PHONY: test-endpoint
