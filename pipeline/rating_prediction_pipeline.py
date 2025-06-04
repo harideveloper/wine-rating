@@ -2,7 +2,7 @@
 from kfp.v2 import dsl
 from kfp.v2.dsl import Dataset, Model, Input, Output, component
 from kfp.v2 import compiler
-from rating_prediction_constants import BASE_IMAGE
+from rating_prediction_constants import BASE_IMAGE, GCS_BUCKET  
 
 # 1. Load data
 @component(packages_to_install=["pandas", "google-cloud-storage"], base_image=BASE_IMAGE)
@@ -104,46 +104,89 @@ def train_model(input_data: Input[Dataset], model_output: Output[Model]):
     print("INFO: Model trained successfully!")
 
 
+# # 3. Register model
+# @component(packages_to_install=["google-cloud-aiplatform"], base_image=BASE_IMAGE)
+# def register_model(model_input: Input[Model], model_output: Output[Model], 
+#                    model_name: str, project: str, region: str):
+#     from google.cloud import aiplatform
+#     import shutil
+#     import os
+    
+#     model_dir = os.path.dirname(model_output.path)
+#     os.makedirs(model_dir, exist_ok=True)
+#     source_file = model_input.path + ".pkl"
+#     target_file = os.path.join(model_dir, "model.pkl")
+    
+#     print(f"INFO: Copying model from: {source_file}")
+#     print(f"INFO: Copying model to: {target_file}")
+    
+#     if os.path.exists(source_file):
+#         shutil.copy(source_file, target_file)
+#         print("INFO: Model file copied successfully")
+#     else:
+#         raise FileNotFoundError(f"Source model file not found: {source_file}")
+    
+#     if os.path.exists(target_file):
+#         print(f"INFO: Model file verified at: {target_file}")
+#         print(f"INFO: File size: {os.path.getsize(target_file)} bytes")
+#     else:
+#         raise FileNotFoundError(f"Target model file not found: {target_file}")
+    
+#     aiplatform.init(project=project, location=region)
+    
+#     print(f"Registering model from directory: {model_dir}")
+#     print(f"Directory contents: {os.listdir(model_dir)}")
+    
+#     model = aiplatform.Model.upload(
+#         display_name=model_name,
+#         artifact_uri=model_dir,
+#         serving_container_image_uri="europe-docker.pkg.dev/vertex-ai/prediction/sklearn-cpu.0-24:latest"
+#     )
+    
+#     model_output.uri = model_dir
+#     model_output.metadata["resource_name"] = model.resource_name
+#     model_output.metadata["display_name"] = model_name
+    
+#     if hasattr(model_input, 'metadata'):
+#         for key, value in model_input.metadata.items():
+#             if key not in model_output.metadata:
+#                 model_output.metadata[key] = value
+    
+#     print(f"INFO: Model registered: {model.resource_name}")
+
 # 3. Register model
-@component(packages_to_install=["google-cloud-aiplatform"], base_image=BASE_IMAGE)
+@component(packages_to_install=["google-cloud-aiplatform", "google-cloud-storage"], base_image=BASE_IMAGE)
 def register_model(model_input: Input[Model], model_output: Output[Model], 
-                   model_name: str, project: str, region: str):
-    from google.cloud import aiplatform
-    import shutil
+                   model_name: str, project: str, region: str, gcs_bucket: str):
+    from google.cloud import aiplatform, storage
     import os
     
-    model_dir = os.path.dirname(model_output.path)
-    os.makedirs(model_dir, exist_ok=True)
+    # Upload model directly to GCS
     source_file = model_input.path + ".pkl"
-    target_file = os.path.join(model_dir, "model.pkl")
+    gcs_model_path = f"gs://{gcs_bucket}/models/{model_name}"
     
-    print(f"INFO: Copying model from: {source_file}")
-    print(f"INFO: Copying model to: {target_file}")
+    print(f"INFO: Uploading model to GCS: {gcs_model_path}")
+    print(f"INFO: Source file: {source_file}")
     
-    if os.path.exists(source_file):
-        shutil.copy(source_file, target_file)
-        print("INFO: Model file copied successfully")
-    else:
-        raise FileNotFoundError(f"Source model file not found: {source_file}")
+    # Upload to GCS
+    client = storage.Client()
+    bucket = client.bucket(gcs_bucket)
+    blob = bucket.blob(f"models/{model_name}/model.pkl")
+    blob.upload_from_filename(source_file)
     
-    if os.path.exists(target_file):
-        print(f"INFO: Model file verified at: {target_file}")
-        print(f"INFO: File size: {os.path.getsize(target_file)} bytes")
-    else:
-        raise FileNotFoundError(f"Target model file not found: {target_file}")
+    print(f"INFO: Model uploaded to GCS successfully")
     
+    # Register to Vertex AI
     aiplatform.init(project=project, location=region)
-    
-    print(f"Registering model from directory: {model_dir}")
-    print(f"Directory contents: {os.listdir(model_dir)}")
     
     model = aiplatform.Model.upload(
         display_name=model_name,
-        artifact_uri=model_dir,
+        artifact_uri=gcs_model_path,
         serving_container_image_uri="europe-docker.pkg.dev/vertex-ai/prediction/sklearn-cpu.0-24:latest"
     )
     
-    model_output.uri = model_dir
+    # Set outputs
+    model_output.uri = gcs_model_path
     model_output.metadata["resource_name"] = model.resource_name
     model_output.metadata["display_name"] = model_name
     
@@ -208,7 +251,8 @@ def rating_prediction_pipeline(
         model_input=train_task.outputs["model_output"],
         model_name=model_name,
         project=project,
-        region=region
+        region=region,
+        gcs_bucket=GCS_BUCKET
     )
     
     # Step 4: Batch predict
