@@ -1,0 +1,3 @@
+{"prediction": 5.0, "input_index": 0, "input_price_numeric": "25.99", "input_Country": "France", "input_Type": "Red", "input_Grape": "Pinot Noir", "input_Style": "Dry"}
+{"prediction": 5.0, "input_index": 1, "input_price_numeric": "18.5", "input_Country": "Italy", "input_Type": "White", "input_Grape": "Chardonnay", "input_Style": "Dry"}
+{"prediction": 5.0, "input_index": 2, "input_price_numeric": "32.0", "input_Country": "Spain", "input_Type": "Red", "input_Grape": "Tempranillo", "input_Style": "Medium"}
