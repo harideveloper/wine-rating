@@ -1,0 +1,25 @@
+{"Country": "France", "Type": "Red", "Grape": "Pinot Noir", "Style": "Elegant & Complex", "Price": "$45.99"}
+{"Country": "Italy", "Type": "Red", "Grape": "Sangiovese", "Style": "Rich & Full", "Price": "$38.50"}
+{"Country": "France", "Type": "White", "Grape": "Chardonnay", "Style": "Elegant & Complex", "Price": "$42.00"}
+{"Country": "Germany", "Type": "White", "Grape": "Riesling", "Style": "Sweet & Aromatic", "Price": "$35.75"}
+{"Country": "France", "Type": "Sparkling", "Grape": "Chardonnay", "Style": "Rich & Full", "Price": "$65.00"}
+{"Country": "Australia", "Type": "Red", "Grape": "Shiraz", "Style": "Bold & Spicy", "Price": "$12.99"}
+{"Country": "Chile", "Type": "White", "Grape": "Sauvignon Blanc", "Style": "Crisp & Fresh", "Price": "$9.50"}
+{"Country": "Spain", "Type": "Red", "Grape": "Tempranillo", "Style": "Light & Fruity", "Price": "$14.75"}
+{"Country": "Portugal", "Type": "White", "Grape": "Vinho Verde", "Style": "Light & Fruity", "Price": "$11.00"}
+{"Country": "USA", "Type": "Red", "Grape": "Merlot", "Style": "Rich & Full", "Price": "$16.99"}
+{"Country": "France", "Type": "Red", "Grape": "Cabernet Sauvignon", "Style": "Bold & Spicy", "Price": "$28.99"}
+{"Country": "Italy", "Type": "White", "Grape": "Pinot Grigio", "Style": "Crisp & Fresh", "Price": "$18.50"}
+{"Country": "Spain", "Type": "Sparkling", "Grape": "Cava", "Style": "Light & Fruity", "Price": "$22.00"}
+{"Country": "Germany", "Type": "White", "Grape": "Gewürztraminer", "Style": "Sweet & Aromatic", "Price": "$26.75"}
+{"Country": "USA", "Type": "Red", "Grape": "Zinfandel", "Style": "Bold & Spicy", "Price": "$24.99"}
+{"Country": "Australia", "Type": "White", "Grape": "Chardonnay", "Style": "Rich & Full", "Price": "$19.99"}
+{"Country": "Chile", "Type": "Red", "Grape": "Carmenère", "Style": "Elegant & Complex", "Price": "$21.50"}
+{"Country": "France", "Type": "Red", "Grape": "Unknown", "Style": "Rich & Full", "Price": "$55.00"}
+{"Country": "Unknown", "Type": "White", "Grape": "Chardonnay", "Style": "Crisp & Fresh", "Price": "$20.00"}
+{"Country": "Italy", "Type": "Unknown", "Grape": "Sangiovese", "Style": "Bold & Spicy", "Price": "$30.00"}
+{"Country": "Spain", "Type": "Red", "Grape": "Tempranillo", "Style": "Unknown", "Price": "$15.00"}
+{"Country": "Germany", "Type": "White", "Grape": "Riesling", "Style": "Sweet & Aromatic", "Price": "$25.00"}
+{"Country": "France", "Type": "Red", "Grape": "Pinot Noir", "Style": "Elegant & Complex", "Price": "$35.00"}
+{"Country": "Italy", "Type": "White", "Grape": "Chardonnay", "Style": "Crisp & Fresh", "Price": "$22.00"}
+{"Country": "Spain", "Type": "Red", "Grape": "Tempranillo", "Style": "Bold & Spicy", "Price": "$18.00"}

@@ -1,0 +1,379 @@
+{
+  "components": {
+    "comp-direct-batch-predict": {
+      "executorLabel": "exec-direct-batch-predict",
+      "inputDefinitions": {
+        "parameters": {
+          "gcs_model_path": {
+            "parameterType": "STRING"
+          },
+          "input_path": {
+            "parameterType": "STRING"
+          },
+          "output_path": {
+            "parameterType": "STRING"
+          }
+        }
+      },
+      "outputDefinitions": {
+        "parameters": {
+          "Output": {
+            "parameterType": "STRING"
+          }
+        }
+      }
+    },
+    "comp-load-data": {
+      "executorLabel": "exec-load-data",
+      "inputDefinitions": {
+        "parameters": {
+          "data_path": {
+            "parameterType": "STRING"
+          }
+        }
+      },
+      "outputDefinitions": {
+        "artifacts": {
+          "output_data": {
+            "artifactType": {
+              "schemaTitle": "system.Dataset",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        }
+      }
+    },
+    "comp-save-model-to-gcs": {
+      "executorLabel": "exec-save-model-to-gcs",
+      "inputDefinitions": {
+        "artifacts": {
+          "model_input": {
+            "artifactType": {
+              "schemaTitle": "system.Model",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        },
+        "parameters": {
+          "gcs_model_path": {
+            "parameterType": "STRING"
+          }
+        }
+      },
+      "outputDefinitions": {
+        "parameters": {
+          "Output": {
+            "parameterType": "STRING"
+          }
+        }
+      }
+    },
+    "comp-train-model": {
+      "executorLabel": "exec-train-model",
+      "inputDefinitions": {
+        "artifacts": {
+          "input_data": {
+            "artifactType": {
+              "schemaTitle": "system.Dataset",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        }
+      },
+      "outputDefinitions": {
+        "artifacts": {
+          "model_output": {
+            "artifactType": {
+              "schemaTitle": "system.Model",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        }
+      }
+    },
+    "comp-validate-results": {
+      "executorLabel": "exec-validate-results",
+      "inputDefinitions": {
+        "parameters": {
+          "output_path": {
+            "parameterType": "STRING"
+          }
+        }
+      },
+      "outputDefinitions": {
+        "parameters": {
+          "Output": {
+            "parameterType": "STRING"
+          }
+        }
+      }
+    }
+  },
+  "deploymentSpec": {
+    "executors": {
+      "exec-direct-batch-predict": {
+        "container": {
+          "args": [
+            "--executor_input",
+            "{{$}}",
+            "--function_to_execute",
+            "direct_batch_predict"
+          ],
+          "command": [
+            "sh",
+            "-c",
+            "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'kfp==2.12.1' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&  python3 -m pip install --quiet --no-warn-script-location 'pandas==1.3.5' 'scikit-learn==0.24.2' 'numpy==1.21.6' 'google-cloud-storage' && \"$0\" \"$@\"\n",
+            "sh",
+            "-ec",
+            "program_path=$(mktemp -d)\n\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+            "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef direct_batch_predict(\n    gcs_model_path: str,\n    input_path: str, \n    output_path: str\n) -> str:\n    \"\"\"Direct batch prediction without Vertex AI containers\"\"\"\n    import pandas as pd\n    import pickle\n    import json\n    import re\n    from google.cloud import storage\n    import io\n    import os\n\n    client = storage.Client()\n\n    # Download model from GCS\n    print(f\"INFO: Downloading model from: {gcs_model_path}\")\n    model_parts = gcs_model_path.replace(\"gs://\", \"\").split(\"/\", 1)\n    model_bucket = client.bucket(model_parts[0])\n    model_blob = model_bucket.blob(model_parts[1])\n    model_blob.download_to_filename(\"model.pkl\")\n\n    # Load model\n    with open(\"model.pkl\", \"rb\") as f:\n        model_pipeline = pickle.load(f)\n    print(\"INFO: Model loaded successfully\")\n\n    # Download input data\n    print(f\"INFO: Processing input data from: {input_path}\")\n    input_parts = input_path.replace(\"gs://\", \"\").split(\"/\", 1)\n    input_bucket = client.bucket(input_parts[0])\n    input_blob = input_bucket.blob(input_parts[1])\n\n    # Handle different input formats\n    if input_path.endswith('.csv'):\n        csv_data = input_blob.download_as_text()\n        df = pd.read_csv(io.StringIO(csv_data))\n        print(f\"INFO: Loaded {len(df)} records from CSV\")\n    elif input_path.endswith('.jsonl'):\n        jsonl_data = input_blob.download_as_text()\n        records = []\n        for line in jsonl_data.strip().split('\\n'):\n            if line.strip():\n                data = json.loads(line)\n                if \"instances\" in data:\n                    records.extend(data[\"instances\"])\n                else:\n                    records.append(data)\n        df = pd.DataFrame(records)\n        print(f\"INFO: Loaded {len(df)} records from JSONL\")\n    else:\n        raise ValueError(f\"Unsupported input format: {input_path}\")\n\n    print(f\"INFO: Input data columns: {list(df.columns)}\")\n\n    # Prepare features (same logic as training)\n    categorical_cols = ['Country', 'Type', 'Grape', 'Style', 'Region']\n    for col in categorical_cols:\n        if col in df.columns:\n            df[col] = df[col].fillna('Unknown')\n\n    # Extract price if available\n    if \"Price\" in df.columns:\n        df[\"price_numeric\"] = df[\"Price\"].apply(\n            lambda x: float(re.search(r'(\\d+\\.?\\d*)', str(x)).group(1))\n            if pd.notna(x) and re.search(r'\\d+\\.?\\d*', str(x))\n            else 10.0\n        )\n    elif \"price_numeric\" not in df.columns:\n        df[\"price_numeric\"] = 10.0\n        print(\"WARNING: No Price or price_numeric column, using default 10.0\")\n\n    # Prepare feature matrix\n    features = ['price_numeric']\n    for col in ['Country', 'Type', 'Grape', 'Style']:\n        if col in df.columns:\n            features.append(col)\n\n    print(f\"INFO: Using features for prediction: {features}\")\n\n    # Make predictions\n    X = df[features].values\n    predictions = model_pipeline.predict(X)\n\n    print(f\"INFO: Generated {len(predictions)} predictions\")\n    print(f\"INFO: Prediction range: {predictions.min():.2f} to {predictions.max():.2f}\")\n\n    # Prepare output\n    results = []\n    for i, pred in enumerate(predictions):\n        result = {\n            \"prediction\": float(pred),\n            \"input_index\": i\n        }\n        # Add input features to result for reference\n        for j, feature in enumerate(features):\n            if j < len(X[i]):\n                result[f\"input_{feature}\"] = str(X[i][j]) if isinstance(X[i][j], (str, object)) else float(X[i][j])\n        results.append(result)\n\n    # Save results to GCS\n    output_parts = output_path.replace(\"gs://\", \"\").split(\"/\", 1)\n    output_bucket = client.bucket(output_parts[0])\n\n    # Save as JSONL\n    output_file = \"predictions.jsonl\"\n    with open(output_file, \"w\") as f:\n        for result in results:\n            f.write(json.dumps(result) + \"\\n\")\n\n    # Upload to GCS\n    output_blob_name = f\"{output_parts[1]}/predictions.jsonl\" if len(output_parts) > 1 else \"predictions.jsonl\"\n    output_blob = output_bucket.blob(output_blob_name)\n    output_blob.upload_from_filename(output_file)\n\n    final_output_path = f\"gs://{output_parts[0]}/{output_blob_name}\"\n    print(f\"INFO: Predictions saved to: {final_output_path}\")\n\n    return f\"Batch prediction completed. {len(predictions)} predictions saved to {final_output_path}\"\n\n"
+          ],
+          "image": "python:3.9"
+        }
+      },
+      "exec-load-data": {
+        "container": {
+          "args": [
+            "--executor_input",
+            "{{$}}",
+            "--function_to_execute",
+            "load_data"
+          ],
+          "command": [
+            "sh",
+            "-c",
+            "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'kfp==2.12.1' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&  python3 -m pip install --quiet --no-warn-script-location 'pandas' 'google-cloud-storage' && \"$0\" \"$@\"\n",
+            "sh",
+            "-ec",
+            "program_path=$(mktemp -d)\n\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+            "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef load_data(data_path: str, output_data: Output[Dataset]):\n    import pandas as pd\n    from google.cloud import storage\n    import io\n\n    bucket_name = data_path.replace('gs://', '').split('/')[0]\n    blob_name = '/'.join(data_path.replace('gs://', '').split('/')[1:])\n    client = storage.Client()\n    bucket = client.bucket(bucket_name)\n    blob = bucket.blob(blob_name)\n    csv_data = blob.download_as_text()\n    df = pd.read_csv(io.StringIO(csv_data))\n\n    df.to_csv(output_data.path, index=False)\n    print(f\"Loaded {len(df)} records from GCS\")\n\n"
+          ],
+          "image": "python:3.9"
+        }
+      },
+      "exec-save-model-to-gcs": {
+        "container": {
+          "args": [
+            "--executor_input",
+            "{{$}}",
+            "--function_to_execute",
+            "save_model_to_gcs"
+          ],
+          "command": [
+            "sh",
+            "-c",
+            "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'kfp==2.12.1' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&  python3 -m pip install --quiet --no-warn-script-location 'google-cloud-storage' && \"$0\" \"$@\"\n",
+            "sh",
+            "-ec",
+            "program_path=$(mktemp -d)\n\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+            "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef save_model_to_gcs(model_input: Input[Model], gcs_model_path: str) -> str:\n    \"\"\"Save model directly to GCS without registry\"\"\"\n    from google.cloud import storage\n    import os\n\n    source_file = model_input.path + \".pkl\"\n\n    # Parse GCS path\n    path_parts = gcs_model_path.replace(\"gs://\", \"\").split(\"/\", 1)\n    bucket_name = path_parts[0]\n    blob_name = path_parts[1]\n\n    print(f\"INFO: Uploading model to GCS: {gcs_model_path}\")\n    print(f\"INFO: Source file: {source_file}\")\n\n    if not os.path.exists(source_file):\n        raise FileNotFoundError(f\"Model file not found: {source_file}\")\n\n    # Upload to GCS\n    client = storage.Client()\n    bucket = client.bucket(bucket_name)\n    blob = bucket.blob(blob_name)\n    blob.upload_from_filename(source_file)\n\n    print(f\"INFO: Model uploaded to GCS successfully\")\n    print(f\"INFO: Model size: {os.path.getsize(source_file)} bytes\")\n\n    return gcs_model_path\n\n"
+          ],
+          "image": "python:3.9"
+        }
+      },
+      "exec-train-model": {
+        "container": {
+          "args": [
+            "--executor_input",
+            "{{$}}",
+            "--function_to_execute",
+            "train_model"
+          ],
+          "command": [
+            "sh",
+            "-c",
+            "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'kfp==2.12.1' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&  python3 -m pip install --quiet --no-warn-script-location 'pandas==1.3.5' 'scikit-learn==0.24.2' 'numpy==1.21.6' && \"$0\" \"$@\"\n",
+            "sh",
+            "-ec",
+            "program_path=$(mktemp -d)\n\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+            "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef train_model(input_data: Input[Dataset], model_output: Output[Model]):\n    import pandas as pd\n    import pickle\n    import re\n    from sklearn.ensemble import RandomForestRegressor\n    from sklearn.preprocessing import OneHotEncoder\n    from sklearn.compose import ColumnTransformer\n    from sklearn.pipeline import Pipeline\n\n    df = pd.read_csv(input_data.path)\n    print(f\"Loaded {len(df)} records\")\n    print(f\"Available columns: {list(df.columns)}\")\n\n    # categorical columns\n    categorical_cols = ['Country', 'Type', 'Grape', 'Style', 'Region']\n    for col in categorical_cols:\n        if col in df.columns:\n            df[col] = df[col].fillna('Unknown')\n\n    # extract price\n    if \"Price\" in df.columns:\n        df[\"price_numeric\"] = df[\"Price\"].apply(\n            lambda x: float(re.search(r'(\\d+\\.?\\d*)', str(x)).group(1))\n            if pd.notna(x) and re.search(r'\\d+\\.?\\d*', str(x))\n            else 10.0\n        )\n        print(\"INFO: Extracted price_numeric from Price column\")\n    else:\n        df[\"price_numeric\"] = 10.0\n        print(\"WARNING: No Price column, using default 10.0\")\n\n    # rating target from price\n    df['Rating'] = (df['price_numeric'] * 0.15) + 3.0\n    df.loc[df['Rating'] > 5.0, 'Rating'] = 5.0\n    df.loc[df['Rating'] < 3.0, 'Rating'] = 3.0\n    print(\"INFO: Created Rating target from price\")\n\n    features = ['price_numeric']\n    categorical_features = []\n\n    # Add categorical features\n    for col in ['Country', 'Type', 'Grape', 'Style']:\n        if col in df.columns:\n            features.append(col)\n            categorical_features.append(col)\n\n    print(f\"Using features: {features}\")\n    print(f\"Categorical features: {categorical_features}\")\n\n    transformers = []\n    transformers.append(('num', 'passthrough', [0]))\n    if categorical_features:\n        cat_indices = list(range(1, len(features)))\n        transformers.append(('cat', OneHotEncoder(handle_unknown='ignore'), cat_indices))\n\n    preprocessor = ColumnTransformer(transformers=transformers)\n\n    pipeline = Pipeline([\n        ('prep', preprocessor),\n        ('model', RandomForestRegressor(n_estimators=10, random_state=42))\n    ])\n\n    # Train\n    X = df[features].values\n    y = df['Rating'].values\n\n    print(f\"Training data shape: {X.shape}\")\n    print(f\"Target range: {y.min():.2f} to {y.max():.2f}\")\n\n    pipeline.fit(X, y)\n\n    # Save model\n    with open(model_output.path + \".pkl\", 'wb') as f:\n        pickle.dump(pipeline, f)\n\n    model_output.metadata[\"features\"] = str(features)\n    print(\"INFO: Model trained successfully!\")\n\n"
+          ],
+          "image": "python:3.9"
+        }
+      },
+      "exec-validate-results": {
+        "container": {
+          "args": [
+            "--executor_input",
+            "{{$}}",
+            "--function_to_execute",
+            "validate_results"
+          ],
+          "command": [
+            "sh",
+            "-c",
+            "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'kfp==2.12.1' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&  python3 -m pip install --quiet --no-warn-script-location 'google-cloud-storage' && \"$0\" \"$@\"\n",
+            "sh",
+            "-ec",
+            "program_path=$(mktemp -d)\n\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+            "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef validate_results(output_path: str) -> str:\n    \"\"\"Validate batch prediction results\"\"\"\n    from google.cloud import storage\n    import json\n\n    client = storage.Client()\n\n    # Find prediction files\n    if output_path.startswith(\"gs://\"):\n        path_parts = output_path.replace(\"gs://\", \"\").split(\"/\")\n        bucket_name = path_parts[0]\n        prefix = \"/\".join(path_parts[1:]) if len(path_parts) > 1 else \"\"\n    else:\n        raise ValueError(f\"Invalid GCS path: {output_path}\")\n\n    bucket = client.bucket(bucket_name)\n    blobs = list(bucket.list_blobs(prefix=prefix))\n\n    prediction_files = [blob.name for blob in blobs if blob.name.endswith('.jsonl')]\n\n    if not prediction_files:\n        return f\"ERROR: No prediction files found at {output_path}\"\n\n    # Validate first prediction file\n    prediction_blob = bucket.blob(prediction_files[0])\n    prediction_data = prediction_blob.download_as_text()\n\n    prediction_count = 0\n    sample_predictions = []\n\n    for line in prediction_data.strip().split('\\n'):\n        if line.strip():\n            prediction = json.loads(line)\n            prediction_count += 1\n            if len(sample_predictions) < 3:\n                sample_predictions.append(prediction)\n\n    print(f\"INFO: Found {len(prediction_files)} prediction files\")\n    print(f\"INFO: Total predictions: {prediction_count}\")\n    print(f\"INFO: Sample predictions: {sample_predictions}\")\n\n    return f\"Validation successful. {prediction_count} predictions in {len(prediction_files)} files.\"\n\n"
+          ],
+          "image": "python:3.9"
+        }
+      }
+    }
+  },
+  "pipelineInfo": {
+    "description": "Rating prediction pipeline with direct batch prediction (no registry)",
+    "name": "rating-prediction-batch-pipeline-direct"
+  },
+  "root": {
+    "dag": {
+      "tasks": {
+        "direct-batch-predict": {
+          "cachingOptions": {
+            "enableCache": true
+          },
+          "componentRef": {
+            "name": "comp-direct-batch-predict"
+          },
+          "dependentTasks": [
+            "save-model-to-gcs"
+          ],
+          "inputs": {
+            "parameters": {
+              "gcs_model_path": {
+                "taskOutputParameter": {
+                  "outputParameterKey": "Output",
+                  "producerTask": "save-model-to-gcs"
+                }
+              },
+              "input_path": {
+                "componentInputParameter": "batch_input_path"
+              },
+              "output_path": {
+                "componentInputParameter": "batch_output_path"
+              }
+            }
+          },
+          "taskInfo": {
+            "name": "direct-batch-predict"
+          }
+        },
+        "load-data": {
+          "cachingOptions": {
+            "enableCache": true
+          },
+          "componentRef": {
+            "name": "comp-load-data"
+          },
+          "inputs": {
+            "parameters": {
+              "data_path": {
+                "componentInputParameter": "data_path"
+              }
+            }
+          },
+          "taskInfo": {
+            "name": "load-data"
+          }
+        },
+        "save-model-to-gcs": {
+          "cachingOptions": {
+            "enableCache": true
+          },
+          "componentRef": {
+            "name": "comp-save-model-to-gcs"
+          },
+          "dependentTasks": [
+            "train-model"
+          ],
+          "inputs": {
+            "artifacts": {
+              "model_input": {
+                "taskOutputArtifact": {
+                  "outputArtifactKey": "model_output",
+                  "producerTask": "train-model"
+                }
+              }
+            },
+            "parameters": {
+              "gcs_model_path": {
+                "runtimeValue": {
+                  "constant": "gs://{{$.inputs.parameters['pipelinechannel--gcs_bucket']}}/models/{{$.inputs.parameters['pipelinechannel--model_name']}}/model.pkl"
+                }
+              },
+              "pipelinechannel--gcs_bucket": {
+                "componentInputParameter": "gcs_bucket"
+              },
+              "pipelinechannel--model_name": {
+                "componentInputParameter": "model_name"
+              }
+            }
+          },
+          "taskInfo": {
+            "name": "save-model-to-gcs"
+          }
+        },
+        "train-model": {
+          "cachingOptions": {
+            "enableCache": true
+          },
+          "componentRef": {
+            "name": "comp-train-model"
+          },
+          "dependentTasks": [
+            "load-data"
+          ],
+          "inputs": {
+            "artifacts": {
+              "input_data": {
+                "taskOutputArtifact": {
+                  "outputArtifactKey": "output_data",
+                  "producerTask": "load-data"
+                }
+              }
+            }
+          },
+          "taskInfo": {
+            "name": "train-model"
+          }
+        },
+        "validate-results": {
+          "cachingOptions": {
+            "enableCache": true
+          },
+          "componentRef": {
+            "name": "comp-validate-results"
+          },
+          "dependentTasks": [
+            "direct-batch-predict"
+          ],
+          "inputs": {
+            "parameters": {
+              "output_path": {
+                "componentInputParameter": "batch_output_path"
+              }
+            }
+          },
+          "taskInfo": {
+            "name": "validate-results"
+          }
+        }
+      }
+    },
+    "inputDefinitions": {
+      "parameters": {
+        "batch_input_path": {
+          "parameterType": "STRING"
+        },
+        "batch_output_path": {
+          "parameterType": "STRING"
+        },
+        "data_path": {
+          "parameterType": "STRING"
+        },
+        "gcs_bucket": {
+          "defaultValue": "model-build-wine-dev2-ea8f",
+          "isOptional": true,
+          "parameterType": "STRING"
+        },
+        "model_name": {
+          "parameterType": "STRING"
+        }
+      }
+    }
+  },
+  "schemaVersion": "2.1.0",
+  "sdkVersion": "kfp-2.12.1"
+}
