@@ -1,7 +1,6 @@
 # run_rating_prediction_pipeline.py
 """
 Run the rating prediction batch pipeline on Vertex AI.
-Updated for direct batch prediction without model registry.
 """
 from google.cloud import aiplatform
 from rating_prediction_pipeline import rating_prediction_pipeline, compile_pipeline
@@ -15,7 +14,7 @@ from rating_prediction_constants import (
     PIPELINE_FILE,
     PIPELINE_JOB_DISPLAY_NAME,
     MODEL_DISPLAY_NAME,
-    GCS_BUCKET,
+    MACHINE_TYPE,
     ENABLE_DETAILED_LOGGING
 )
 import logging
@@ -65,13 +64,12 @@ def run_rating_prediction_pipeline(
     pipeline_root: str = PIPELINE_ROOT,
     pipeline_file: str = PIPELINE_FILE,
     model_name: str = MODEL_DISPLAY_NAME,
-    gcs_bucket: str = GCS_BUCKET,
+    machine_type: str = MACHINE_TYPE,
     enable_caching: bool = True,
     sync: bool = True
 ):
     """
     Run the rating prediction batch pipeline on Vertex AI.
-    Updated for direct batch prediction without model registry.
     
     Args:
         project_id: GCP project ID
@@ -82,7 +80,7 @@ def run_rating_prediction_pipeline(
         pipeline_root: Root path for pipeline artifacts
         pipeline_file: Name of compiled pipeline file
         model_name: Display name for the model
-        gcs_bucket: GCS bucket name for storing models
+        machine_type: Machine type for batch prediction
         enable_caching: Whether to enable pipeline caching
         sync: Whether to run pipeline synchronously
     
@@ -101,13 +99,8 @@ def run_rating_prediction_pipeline(
         logger.info(f"INFO: Region: {region}")
         
         aiplatform.init(project=project_id, location=region)
-        
-        # Compile pipeline
-        logger.info(f"INFO: Compiling pipeline...")
         compile_pipeline(pipeline_file)
-        logger.info(f"INFO: Pipeline compiled to {pipeline_file}")
         
-        # Create pipeline job
         job = aiplatform.PipelineJob(
             display_name=PIPELINE_JOB_DISPLAY_NAME,
             template_path=pipeline_file,
@@ -116,8 +109,10 @@ def run_rating_prediction_pipeline(
                 "data_path": data_path,
                 "batch_input_path": batch_input_path,
                 "batch_output_path": batch_output_path,
-                "model_name": model_name,
-                "gcs_bucket": gcs_bucket
+                "project": project_id,
+                "region": region,
+                "machine_type": machine_type,
+                "model_name": model_name
             },
             enable_caching=enable_caching
         )
@@ -127,10 +122,9 @@ def run_rating_prediction_pipeline(
         logger.info(f"DEBUG: Training data: {data_path}")
         logger.info(f"DEBUG: Batch input: {batch_input_path}")
         logger.info(f"DEBUG: Output folder: {batch_output_path}")
+        logger.info(f"DEBUG:Machine type: {machine_type}")
         logger.info(f"DEBUG: Model name: {model_name}")
-        logger.info(f"DEBUG: GCS bucket: {gcs_bucket}")
         logger.info(f"DEBUG: Caching enabled: {enable_caching}")
-        logger.info(f"DEBUG: Pipeline type: Direct batch prediction (no registry)")
         
         logger.info(f"INFO: Starting pipeline execution...")
         job.run(sync=sync)
@@ -143,11 +137,9 @@ def run_rating_prediction_pipeline(
             
             if job.state == "PIPELINE_STATE_SUCCEEDED":
                 logger.info(f"INFO: Pipeline succeeded! Check your GCS bucket for predictions.")
-                logger.info(f"INFO: Predictions location: {batch_output_path}/predictions.jsonl")
-                logger.info(f"INFO: Model saved to: gs://{gcs_bucket}/models/{model_name}/model.pkl")
+                logger.info(f"INFO: Predictions location: {batch_output_path}")
             else:
                 logger.error(f"ERROR: Pipeline failed with state: {job.state}")
-                logger.info(f"INFO: Check the Vertex AI console for detailed error logs")
         else:
             logger.info(f"INFO: Pipeline started asynchronously")
             logger.info(f"INFO: Job ID: {job.resource_name}")
@@ -187,60 +179,6 @@ def check_pipeline_status(job_resource_name: str, project_id: str = PROJECT_ID, 
         raise
 
 
-def create_sample_batch_input():
-    """
-    Create a sample batch input file for testing.
-    This is a helper function to generate test data.
-    """
-    logger = setup_logging()
-    import json
-    from google.cloud import storage
-    
-    # Sample data matching the wine dataset structure
-    sample_instances = [
-        {
-            "Country": "France",
-            "Type": "Red",
-            "Grape": "Pinot Noir",
-            "Style": "Dry",
-            "Price": "$25.99"
-        },
-        {
-            "Country": "Italy",
-            "Type": "White",
-            "Grape": "Chardonnay",
-            "Style": "Dry",
-            "Price": "$18.50"
-        },
-        {
-            "Country": "Spain",
-            "Type": "Red",
-            "Grape": "Tempranillo",
-            "Style": "Medium",
-            "Price": "$32.00"
-        }
-    ]
-    
-    # Create JSONL content
-    jsonl_content = ""
-    for instance in sample_instances:
-        jsonl_content += json.dumps(instance) + "\n"
-    
-    # Upload to GCS
-    try:
-        client = storage.Client(project=PROJECT_ID)
-        bucket = client.bucket(GCS_BUCKET)
-        blob = bucket.blob("batch.jsonl")
-        blob.upload_from_string(jsonl_content)
-        
-        logger.info(f"INFO: Sample batch input created at: gs://{GCS_BUCKET}/batch.jsonl")
-        logger.info(f"INFO: Created {len(sample_instances)} sample instances")
-        
-    except Exception as e:
-        logger.error(f"ERROR: Failed to create sample batch input: {str(e)}")
-        raise
-
-
 if __name__ == "__main__":
     """
     Main execution block.
@@ -248,18 +186,13 @@ if __name__ == "__main__":
     """
     logger = setup_logging()
     
-    logger.info("INFO: Starting Rating Prediction Pipeline (Direct Batch Prediction)...")
+    logger.info("INFO: Starting Rating Prediction Pipeline...")
     
     try:
-        # Optionally create sample batch input data
-        # Uncomment the next line if you need to create test data
-        # create_sample_batch_input()
-        
         job = run_rating_prediction_pipeline()
         
         if job.state == "PIPELINE_STATE_SUCCEEDED":
             logger.info("INFO: Success! Your rating predictions are ready!")
-            logger.info("INFO: Pipeline completed without using model registry or external containers.")
         else:
             logger.warning(f"WARNING: Pipeline completed with state: {job.state}")
             

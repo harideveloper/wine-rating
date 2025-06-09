@@ -1,272 +1,326 @@
 # rating_prediction_pipeline.py
-from kfp.v2 import dsl
+from kfp.v2 import dsl, compiler
 from kfp.v2.dsl import Dataset, Model, Input, Output, component
-from kfp.v2 import compiler
-from rating_prediction_constants import BASE_IMAGE, GCS_BUCKET  
+from rating_prediction_constants import BASE_IMAGE, GCS_BUCKET
 
-# 1. Load data
-@component(packages_to_install=["pandas", "google-cloud-storage"], base_image=BASE_IMAGE)
-def load_data(data_path: str, output_data: Output[Dataset]):
+# Constants for feature processing
+CATEGORICAL_COLS = ['Country', 'Type', 'Grape', 'Style', 'Region']
+FEATURE_COLS = ['price_numeric', 'Country', 'Type', 'Grape', 'Style']
+RATING_BONUSES = {
+    'Country': {'France': 0.3, 'Italy': 0.2, 'Spain': 0.1, 'Germany': 0.15, 'USA': 0.1, 'Australia': 0.05, 'Portugal': 0.1},
+    'Type': {'Red': 0.1, 'White': 0.05, 'Rosé': 0.0, 'Sparkling': 0.15}
+}
+
+# Shared utility functions
+def extract_price_numeric(price_series):
+    """Extract numeric price from Price column."""
+    import re
     import pandas as pd
+    
+    return price_series.apply(
+        lambda x: float(re.search(r'(\d+\.?\d*)', str(x)).group(1))
+        if pd.notna(x) and re.search(r'\d+\.?\d*', str(x))
+        else 10.0
+    )
+
+def prepare_features(df):
+    """Standardize feature preparation for both training and prediction."""
+    import pandas as pd
+    
+    # Handle categorical columns
+    for col in CATEGORICAL_COLS:
+        if col in df.columns:
+            df[col] = df[col].fillna('Unknown')
+    
+    # Handle price extraction
+    if "Price" in df.columns:
+        df["price_numeric"] = extract_price_numeric(df["Price"])
+        print(f"INFO: Extracted price_numeric from Price column")
+    elif "price_numeric" in df.columns:
+        df["price_numeric"] = pd.to_numeric(df["price_numeric"], errors='coerce').fillna(10.0)
+        print(f"INFO: Using existing price_numeric column")
+    else:
+        df["price_numeric"] = 10.0
+        print("WARNING: No price data found, using default 10.0")
+    
+    # Select available features
+    available_features = [col for col in FEATURE_COLS if col in df.columns]
+    print(f"INFO: Using features: {available_features}")
+    
+    return df, available_features
+
+def load_gcs_data(data_path, file_format):
+    """Load data from GCS in specified format."""
     from google.cloud import storage
+    import pandas as pd
+    import json
     import io
     
+    # Parse GCS path
     bucket_name = data_path.replace('gs://', '').split('/')[0]
     blob_name = '/'.join(data_path.replace('gs://', '').split('/')[1:])
+    
+    # Download data
     client = storage.Client()
     bucket = client.bucket(bucket_name)
     blob = bucket.blob(blob_name)
-    csv_data = blob.download_as_text()
-    df = pd.read_csv(io.StringIO(csv_data))
     
+    if file_format == 'csv':
+        csv_data = blob.download_as_text()
+        df = pd.read_csv(io.StringIO(csv_data))
+    elif file_format == 'jsonl':
+        jsonl_data = blob.download_as_text()
+        records = []
+        for line in jsonl_data.strip().split('\n'):
+            if line.strip():
+                data = json.loads(line)
+                if "instances" in data:
+                    records.extend(data["instances"])
+                else:
+                    records.append(data)
+        df = pd.DataFrame(records)
+    else:
+        raise ValueError(f"Unsupported format: {file_format}")
+    
+    print(f"INFO: Loaded {len(df)} records from {file_format.upper()}")
+    return df
+
+def save_to_gcs(data, output_path, filename):
+    """Save data to GCS."""
+    from google.cloud import storage
+    import json
+    
+    # Parse output path
+    output_parts = output_path.replace("gs://", "").split("/", 1)
+    bucket_name = output_parts[0]
+    prefix = output_parts[1] if len(output_parts) > 1 else ""
+    
+    # Save locally first
+    with open(filename, "w") as f:
+        for item in data:
+            f.write(json.dumps(item) + "\n")
+    
+    # Upload to GCS
+    client = storage.Client()
+    bucket = client.bucket(bucket_name)
+    blob_name = f"{prefix}/{filename}" if prefix else filename
+    blob = bucket.blob(blob_name)
+    blob.upload_from_filename(filename)
+    
+    final_path = f"gs://{bucket_name}/{blob_name}"
+    print(f"INFO: Data saved to: {final_path}")
+    return final_path
+
+# Pipeline Components
+@component(packages_to_install=["pandas", "google-cloud-storage"], base_image=BASE_IMAGE)
+def load_data(data_path: str, output_data: Output[Dataset]):
+    """Load training data from GCS."""
+    import pandas as pd
+    
+    df = load_gcs_data(data_path, 'csv')
     df.to_csv(output_data.path, index=False)
-    print(f"Loaded {len(df)} records from GCS")
 
-
-# 2. Train model
 @component(packages_to_install=["pandas==1.3.5", "scikit-learn==0.24.2", "numpy==1.21.6"], base_image=BASE_IMAGE)
 def train_model(input_data: Input[Dataset], model_output: Output[Model]):
+    """Train the rating prediction model."""
     import pandas as pd
     import pickle
-    import re
+    import numpy as np
     from sklearn.ensemble import RandomForestRegressor
     from sklearn.preprocessing import OneHotEncoder
     from sklearn.compose import ColumnTransformer
     from sklearn.pipeline import Pipeline
     
+    # Load and prepare data
     df = pd.read_csv(input_data.path)
-    print(f"Loaded {len(df)} records")
-    print(f"Available columns: {list(df.columns)}")
+    print(f"INFO: Training on {len(df)} records")
     
-    # categorical columns
-    categorical_cols = ['Country', 'Type', 'Grape', 'Style', 'Region']
-    for col in categorical_cols:
-        if col in df.columns:
-            df[col] = df[col].fillna('Unknown')
+    df, features = prepare_features(df)
     
-    # extract price
-    if "Price" in df.columns:
-        df["price_numeric"] = df["Price"].apply(
-            lambda x: float(re.search(r'(\d+\.?\d*)', str(x)).group(1))
-            if pd.notna(x) and re.search(r'\d+\.?\d*', str(x))
-            else 10.0
-        )
-        print("INFO: Extracted price_numeric from Price column")
-    else:
-        df["price_numeric"] = 10.0
-        print("WARNING: No Price column, using default 10.0")
+    # Create realistic rating targets
+    base_rating = (df['price_numeric'] * 0.1) + 2.5
     
-    # rating target from price
-    df['Rating'] = (df['price_numeric'] * 0.15) + 3.0
-    df.loc[df['Rating'] > 5.0, 'Rating'] = 5.0
-    df.loc[df['Rating'] < 3.0, 'Rating'] = 3.0
-    print("INFO: Created Rating target from price")
+    # Add bonuses for variety
+    for feature, bonus_map in RATING_BONUSES.items():
+        if feature in df.columns:
+            bonus = df[feature].map(bonus_map).fillna(0.0)
+            base_rating += bonus
     
-    features = ['price_numeric']
-    categorical_features = []
+    # Add controlled noise
+    np.random.seed(42)
+    noise = np.random.normal(0, 0.1, len(df))
+    df['Rating'] = (base_rating + noise).clip(3.0, 5.0)
     
-    # Add categorical features
-    for col in ['Country', 'Type', 'Grape', 'Style']:
-        if col in df.columns:
-            features.append(col)
-            categorical_features.append(col)
+    print(f"INFO: Rating range: {df['Rating'].min():.2f} to {df['Rating'].max():.2f}")
     
-    print(f"Using features: {features}")
-    print(f"Categorical features: {categorical_features}")
+    # Build pipeline
+    categorical_features = [f for f in features if f in CATEGORICAL_COLS]
+    transformers = [('num', 'passthrough', [0])]  # price_numeric at index 0
     
-    transformers = []
-    transformers.append(('num', 'passthrough', [0]))
     if categorical_features:
         cat_indices = list(range(1, len(features)))
-        transformers.append(('cat', OneHotEncoder(handle_unknown='ignore'), cat_indices))
+        transformers.append(('cat', OneHotEncoder(handle_unknown='ignore', sparse=False), cat_indices))
     
-    preprocessor = ColumnTransformer(transformers=transformers)
-    
+    preprocessor = ColumnTransformer(transformers=transformers, remainder='drop')
     pipeline = Pipeline([
         ('prep', preprocessor),
-        ('model', RandomForestRegressor(n_estimators=10, random_state=42))
+        ('model', RandomForestRegressor(n_estimators=50, random_state=42, max_depth=10))
     ])
     
-    # Train
-    X = df[features].values
+    # Train model
+    X = df[features]
     y = df['Rating'].values
-    
-    print(f"Training data shape: {X.shape}")
-    print(f"Target range: {y.min():.2f} to {y.max():.2f}")
-    
     pipeline.fit(X, y)
+    
+    # Validate training
+    test_pred = pipeline.predict(X.head())
+    print(f"INFO: Model trained. Sample predictions: {test_pred[:3]}")
     
     # Save model
     with open(model_output.path + ".pkl", 'wb') as f:
         pickle.dump(pipeline, f)
     
     model_output.metadata["features"] = str(features)
-    print("INFO: Model trained successfully!")
 
-
-# # 3. Register model
-# @component(packages_to_install=["google-cloud-aiplatform"], base_image=BASE_IMAGE)
-# def register_model(model_input: Input[Model], model_output: Output[Model], 
-#                    model_name: str, project: str, region: str):
-#     from google.cloud import aiplatform
-#     import shutil
-#     import os
-    
-#     model_dir = os.path.dirname(model_output.path)
-#     os.makedirs(model_dir, exist_ok=True)
-#     source_file = model_input.path + ".pkl"
-#     target_file = os.path.join(model_dir, "model.pkl")
-    
-#     print(f"INFO: Copying model from: {source_file}")
-#     print(f"INFO: Copying model to: {target_file}")
-    
-#     if os.path.exists(source_file):
-#         shutil.copy(source_file, target_file)
-#         print("INFO: Model file copied successfully")
-#     else:
-#         raise FileNotFoundError(f"Source model file not found: {source_file}")
-    
-#     if os.path.exists(target_file):
-#         print(f"INFO: Model file verified at: {target_file}")
-#         print(f"INFO: File size: {os.path.getsize(target_file)} bytes")
-#     else:
-#         raise FileNotFoundError(f"Target model file not found: {target_file}")
-    
-#     aiplatform.init(project=project, location=region)
-    
-#     print(f"Registering model from directory: {model_dir}")
-#     print(f"Directory contents: {os.listdir(model_dir)}")
-    
-#     model = aiplatform.Model.upload(
-#         display_name=model_name,
-#         artifact_uri=model_dir,
-#         serving_container_image_uri="europe-docker.pkg.dev/vertex-ai/prediction/sklearn-cpu.0-24:latest"
-#     )
-    
-#     model_output.uri = model_dir
-#     model_output.metadata["resource_name"] = model.resource_name
-#     model_output.metadata["display_name"] = model_name
-    
-#     if hasattr(model_input, 'metadata'):
-#         for key, value in model_input.metadata.items():
-#             if key not in model_output.metadata:
-#                 model_output.metadata[key] = value
-    
-#     print(f"INFO: Model registered: {model.resource_name}")
-
-# 3. Register model
-@component(packages_to_install=["google-cloud-aiplatform", "google-cloud-storage"], base_image=BASE_IMAGE)
-def register_model(model_input: Input[Model], model_output: Output[Model], 
-                   model_name: str, project: str, region: str, gcs_bucket: str):
-    from google.cloud import aiplatform, storage
+@component(packages_to_install=["google-cloud-storage"], base_image=BASE_IMAGE)
+def save_model_to_gcs(model_input: Input[Model], gcs_model_path: str) -> str:
+    """Save trained model to GCS."""
+    from google.cloud import storage
     import os
     
-    # Upload model directly to GCS
     source_file = model_input.path + ".pkl"
-    gcs_model_path = f"gs://{gcs_bucket}/models/{model_name}"
     
-    print(f"INFO: Uploading model to GCS: {gcs_model_path}")
-    print(f"INFO: Source file: {source_file}")
+    if not os.path.exists(source_file):
+        raise FileNotFoundError(f"Model file not found: {source_file}")
     
-    # Upload to GCS
+    # Parse GCS path and upload
+    path_parts = gcs_model_path.replace("gs://", "").split("/", 1)
     client = storage.Client()
-    bucket = client.bucket(gcs_bucket)
-    blob = bucket.blob(f"models/{model_name}/model.pkl")
+    bucket = client.bucket(path_parts[0])
+    blob = bucket.blob(path_parts[1])
     blob.upload_from_filename(source_file)
     
-    print(f"INFO: Model uploaded to GCS successfully")
-    
-    # Register to Vertex AI
-    aiplatform.init(project=project, location=region)
-    
-    model = aiplatform.Model.upload(
-        display_name=model_name,
-        artifact_uri=gcs_model_path,
-        serving_container_image_uri="europe-docker.pkg.dev/vertex-ai/prediction/sklearn-cpu.0-24:latest"
-    )
-    
-    # Set outputs
-    model_output.uri = gcs_model_path
-    model_output.metadata["resource_name"] = model.resource_name
-    model_output.metadata["display_name"] = model_name
-    
-    if hasattr(model_input, 'metadata'):
-        for key, value in model_input.metadata.items():
-            if key not in model_output.metadata:
-                model_output.metadata[key] = value
-    
-    print(f"INFO: Model registered: {model.resource_name}")
+    print(f"INFO: Model saved to {gcs_model_path} ({os.path.getsize(source_file)} bytes)")
+    return gcs_model_path
 
+@component(packages_to_install=[
+    "pandas==1.3.5", "scikit-learn==0.24.2", "numpy==1.21.6", "google-cloud-storage"
+], base_image=BASE_IMAGE)
+def batch_predict(gcs_model_path: str, input_path: str, output_path: str) -> str:
+    """Run batch predictions."""
+    import pandas as pd
+    import pickle
+    from google.cloud import storage
+    
+    # Load model
+    model_parts = gcs_model_path.replace("gs://", "").split("/", 1)
+    client = storage.Client()
+    bucket = client.bucket(model_parts[0])
+    blob = bucket.blob(model_parts[1])
+    blob.download_to_filename("model.pkl")
+    
+    with open("model.pkl", "rb") as f:
+        model_pipeline = pickle.load(f)
+    
+    print("INFO: Model loaded successfully")
+    
+    # Load and prepare input data
+    file_format = 'jsonl' if input_path.endswith('.jsonl') else 'csv'
+    df = load_gcs_data(input_path, file_format)
+    df, features = prepare_features(df)
+    
+    # Make predictions
+    X = df[features]
+    predictions = model_pipeline.predict(X)
+    
+    print(f"INFO: Generated {len(predictions)} predictions")
+    print(f"INFO: Prediction range: {predictions.min():.2f} to {predictions.max():.2f}")
+    
+    # Prepare results
+    results = []
+    for i, pred in enumerate(predictions):
+        result = {"prediction": float(pred), "input_index": i}
+        for feature in features:
+            result[f"input_{feature}"] = str(df.iloc[i][feature])
+        results.append(result)
+    
+    # Save results
+    final_path = save_to_gcs(results, output_path, "predictions.jsonl")
+    return f"Batch prediction completed. {len(predictions)} predictions saved to {final_path}"
 
-# 4. Batch predict
-@component(packages_to_install=["google-cloud-aiplatform"], base_image=BASE_IMAGE)
-def batch_predict(model_input: Input[Model], 
-                  input_path: str, output_path: str, 
-                  project: str, region: str,
-                  machine_type: str = "n1-standard-4"):
-    from google.cloud import aiplatform
+@component(packages_to_install=["google-cloud-storage"], base_image=BASE_IMAGE)
+def validate_results(output_path: str) -> str:
+    """Validate prediction results."""
+    from google.cloud import storage
+    import json
     
-    aiplatform.init(project=project, location=region)
-    model_name = model_input.metadata["resource_name"]
-    model = aiplatform.Model(model_name)
+    # Find prediction files
+    path_parts = output_path.replace("gs://", "").split("/")
+    bucket_name = path_parts[0]
+    prefix = "/".join(path_parts[1:]) if len(path_parts) > 1 else ""
     
-    print(f"INFO: Using model: {model_name}")
-    print(f"INFO: Input data: {input_path}")
-    print(f"INFO: Output path: {output_path}")
-    print(f"INFO: Machine type: {machine_type}")
+    client = storage.Client()
+    bucket = client.bucket(bucket_name)
+    blobs = list(bucket.list_blobs(prefix=prefix))
+    prediction_files = [blob.name for blob in blobs if blob.name.endswith('.jsonl')]
     
-    job = model.batch_predict(
-        job_display_name="rating-prediction-batch-job",
-        gcs_source=input_path,
-        gcs_destination_prefix=output_path,
-        machine_type=machine_type,
-        starting_replica_count=1,
-        max_replica_count=1,
-        sync=True
-    )
+    if not prediction_files:
+        return f"ERROR: No prediction files found at {output_path}"
     
-    print(f"INFO: Batch prediction completed: {job.resource_name}")
-    print(f"INFO: Check results at: {output_path}")
+    # Sample validation
+    prediction_blob = bucket.blob(prediction_files[0])
+    prediction_data = prediction_blob.download_as_text()
+    
+    predictions = []
+    for line in prediction_data.strip().split('\n'):
+        if line.strip():
+            predictions.append(json.loads(line))
+    
+    print(f"INFO: Found {len(predictions)} predictions")
+    print(f"INFO: Sample: {predictions[:2]}")
+    
+    return f"Validation successful. {len(predictions)} predictions in {len(prediction_files)} files."
 
-
-# Pipeline definition
-@dsl.pipeline(name="rating-prediction-batch-pipeline")
+# Pipeline Definition
+@dsl.pipeline(name="rating-prediction-pipeline")
 def rating_prediction_pipeline(
     data_path: str,
     batch_input_path: str,
     batch_output_path: str,
-    project: str,
-    region: str,
-    machine_type: str ,
     model_name: str,
+    gcs_bucket: str = GCS_BUCKET
 ):
-    # Step 1: Load data
+    """Clean rating prediction pipeline."""
+    
+    # Load training data
     load_task = load_data(data_path=data_path)
     
-    # Step 2: Train model  
+    # Train model
     train_task = train_model(input_data=load_task.outputs["output_data"])
     
-    # Step 3: Register model
-    register_task = register_model(
+    # Save model to GCS
+    gcs_model_path = f"gs://{gcs_bucket}/models/{model_name}/model.pkl"
+    save_task = save_model_to_gcs(
         model_input=train_task.outputs["model_output"],
-        model_name=model_name,
-        project=project,
-        region=region,
-        gcs_bucket=GCS_BUCKET
+        gcs_model_path=gcs_model_path
     )
     
-    # Step 4: Batch predict
-    batch_task = batch_predict(
-        model_input=register_task.outputs["model_output"],
+    # Run batch prediction
+    predict_task = batch_predict(
+        gcs_model_path=save_task.output,
         input_path=batch_input_path,
-        output_path=batch_output_path,
-        project=project,
-        region=region,
-        machine_type=machine_type
+        output_path=batch_output_path
     )
+    
+    # Validate results
+    validate_task = validate_results(output_path=batch_output_path)
+    
+    # Set dependencies
+    train_task.after(load_task)
+    save_task.after(train_task)
+    predict_task.after(save_task)
+    validate_task.after(predict_task)
 
-
-# Compile function
 def compile_pipeline(output_file: str = "rating_prediction_pipeline.json"):
     """Compile the pipeline."""
     compiler.Compiler().compile(
@@ -274,7 +328,6 @@ def compile_pipeline(output_file: str = "rating_prediction_pipeline.json"):
         package_path=output_file
     )
     print(f"INFO: Pipeline compiled to {output_file}")
-
 
 if __name__ == "__main__":
     compile_pipeline()

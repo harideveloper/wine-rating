@@ -11,24 +11,24 @@ GCS_BUCKET = "model-build-wine-dev2-ea8f"
 # Data Paths
 DATA_PATH = f"gs://{GCS_BUCKET}/wine_data.csv"  
 BATCH_INPUT_PATH = f"gs://{GCS_BUCKET}/batch.jsonl"  
-BATCH_OUTPUT_PATH = f"gs://{GCS_BUCKET}/predictions"  # Removed trailing slash for consistency
+BATCH_OUTPUT_PATH = f"gs://{GCS_BUCKET}/predictions/"  
 
 # Pipeline Configuration
 PIPELINE_ROOT = f"gs://{GCS_BUCKET}/pipeline_root" 
-PIPELINE_FILE = "rating_prediction_pipeline_direct.json"  # Updated filename
-PIPELINE_JOB_DISPLAY_NAME = "rating-prediction-batch-pipeline-direct"
+PIPELINE_FILE = "rating_prediction_pipeline.json"  
+PIPELINE_JOB_DISPLAY_NAME = "rating-prediction-batch-pipeline"
 
 # Model Configuration
 MODEL_DISPLAY_NAME = "rating-prediction-model"
-# Removed MACHINE_TYPE since we're not using Vertex AI batch prediction containers
+MACHINE_TYPE = "n1-standard-4" 
 
 # Pipeline Parameters
 RANDOM_STATE = 42
 N_ESTIMATORS = 10 
 
-# Container Configuration
+# Serving Configuration
+SERVING_CONTAINER_IMAGE_URI = "europe-docker.pkg.dev/vertex-ai/prediction/sklearn-cpu.0-24:latest"
 BASE_IMAGE = "python:3.9"
-# Removed SERVING_CONTAINER_IMAGE_URI since we're not using external containers
 
 # Logging
 ENABLE_DETAILED_LOGGING = True

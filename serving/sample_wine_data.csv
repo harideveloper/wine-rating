@@ -1,0 +1,1001 @@
+price,country,wine_type,grape,style,rating
+18.13,Spain,Red,Sauvignon Blanc,Fresh,92.5
+5.85,Spain,Red,Chardonnay,Complex,93.3
+7.65,Australia,Red,Grenache,Elegant,92.0
+1.73,USA,Rosé,Pinot Noir,Smooth,88.3
+94.4,Spain,Red,Pinot Noir,Fresh,96.9
+7.54,Australia,White,Chardonnay,Smooth,91.9
+5.38,Australia,Rosé,Pinot Noir,Elegant,90.0
+4.69,USA,White,Riesling,Elegant,91.3
+4.21,Argentina,White,Grenache,Smooth,88.3
+21.99,Chile,Rosé,Syrah,Elegant,92.5
+5.43,Italy,Rosé,Sauvignon Blanc,Complex,89.2
+4.15,USA,Red,Syrah,Bold,90.1
+19.41,Spain,Rosé,Cabernet Sauvignon,Crisp,91.7
+10.32,France,Rosé,Syrah,Complex,93.4
+5.95,Argentina,Rosé,Sangiovese,Bold,88.3
+23.34,Spain,Rosé,Cabernet Sauvignon,Crisp,93.0
+16.27,France,Red,Grenache,Fresh,93.3
+11.84,France,Rosé,Grenache,Light,94.1
+4.04,Argentina,Red,Chardonnay,Bold,89.2
+25.1,Argentina,Rosé,Chardonnay,Bold,91.5
+10.28,Chile,White,Grenache,Bold,89.8
+7.48,USA,White,Grenache,Fresh,90.4
+9.51,France,Red,Syrah,Crisp,93.9
+33.75,France,Rosé,Tempranillo,Elegant,95.5
+1.46,Australia,Red,Pinot Noir,Light,87.4
+17.5,Chile,Red,Chardonnay,Rich,92.4
+12.03,USA,White,Tempranillo,Light,90.9
+6.64,France,Rosé,Cabernet Sauvignon,Light,90.7
+7.19,Australia,Red,Cabernet Sauvignon,Crisp,90.0
+15.97,Italy,White,Tempranillo,Smooth,96.5
+10.26,France,Rosé,Riesling,Complex,93.3
+16.2,Chile,Rosé,Cabernet Sauvignon,Rich,90.5
+5.52,Australia,Rosé,Chardonnay,Smooth,87.3
+3.52,Argentina,Red,Cabernet Sauvignon,Complex,91.7
+20.01,France,Rosé,Syrah,Rich,93.7
+14.36,Italy,Rosé,Tempranillo,Smooth,88.4
+3.1,France,White,Sauvignon Blanc,Bold,91.5
+10.83,France,Rosé,Pinot Noir,Complex,95.1
+13.29,Chile,Red,Sangiovese,Smooth,91.4
+14.6,Spain,White,Syrah,Crisp,92.1
+10.87,Spain,Red,Syrah,Smooth,87.9
+5.59,Australia,Rosé,Pinot Noir,Rich,91.0
+17.02,Spain,Rosé,Riesling,Fresh,86.9
+18.76,Chile,Red,Pinot Noir,Elegant,90.9
+10.88,Australia,White,Cabernet Sauvignon,Smooth,92.5
+24.05,USA,Red,Pinot Noir,Smooth,95.1
+12.6,France,White,Sauvignon Blanc,Elegant,94.8
+11.03,Australia,Rosé,Pinot Noir,Smooth,91.3
+8.48,Australia,Rosé,Cabernet Sauvignon,Complex,93.8
+1.91,Italy,Rosé,Riesling,Light,85.8
+20.25,Argentina,White,Grenache,Light,87.9
+24.69,France,Rosé,Riesling,Complex,95.5
+2.88,Italy,Rosé,Merlot,Rich,90.1
+6.78,Argentina,Red,Chardonnay,Bold,91.2
+7.81,Spain,Rosé,Merlot,Light,87.9
+55.24,Spain,Red,Grenache,Fresh,93.7
+8.76,Italy,White,Riesling,Crisp,91.5
+12.83,Australia,Red,Tempranillo,Smooth,89.9
+8.91,Chile,Rosé,Pinot Noir,Fresh,89.2
+11.18,Spain,White,Tempranillo,Light,88.9
+18.25,Australia,Red,Grenache,Light,93.5
+8.33,Chile,White,Syrah,Complex,90.9
+14.11,Australia,Rosé,Sauvignon Blanc,Elegant,93.4
+4.73,Chile,Red,Sauvignon Blanc,Fresh,89.6
+10.08,Italy,White,Sauvignon Blanc,Fresh,95.4
+8.29,Australia,Rosé,Grenache,Light,84.0
+12.2,Australia,Red,Chardonnay,Complex,96.5
+14.29,France,Rosé,Chardonnay,Complex,94.1
+22.18,France,Red,Pinot Noir,Crisp,97.8
+10.79,France,White,Merlot,Bold,94.9
+15.25,France,White,Sangiovese,Bold,93.2
+7.6,USA,White,Sauvignon Blanc,Light,91.8
+25.02,USA,Red,Sauvignon Blanc,Bold,96.1
+6.28,France,Rosé,Cabernet Sauvignon,Crisp,88.6
+2.91,Argentina,Rosé,Sauvignon Blanc,Smooth,83.7
+42.19,France,Rosé,Syrah,Elegant,95.6
+12.3,France,White,Pinot Noir,Rich,95.9
+8.77,USA,White,Chardonnay,Crisp,92.3
+6.16,Australia,Rosé,Syrah,Smooth,88.6
+30.77,Argentina,Red,Tempranillo,Bold,95.4
+15.79,Spain,White,Syrah,Light,93.9
+13.09,Chile,Rosé,Sangiovese,Light,88.3
+24.75,Italy,Red,Sauvignon Blanc,Elegant,96.0
+30.68,Argentina,Rosé,Syrah,Bold,90.9
+7.16,Argentina,Rosé,Riesling,Fresh,90.7
+24.19,Argentina,White,Pinot Noir,Bold,92.1
+12.0,Italy,Red,Syrah,Fresh,92.4
+18.46,Chile,Red,Cabernet Sauvignon,Rich,95.9
+9.26,Chile,White,Sauvignon Blanc,Complex,93.4
+14.57,Australia,Rosé,Pinot Noir,Smooth,90.4
+6.95,France,Red,Riesling,Elegant,92.9
+38.45,Spain,White,Sangiovese,Elegant,93.9
+70.23,Italy,White,Sangiovese,Light,92.9
+6.65,Australia,Red,Chardonnay,Complex,92.0
+8.2,France,Red,Sauvignon Blanc,Smooth,93.1
+3.63,Australia,White,Pinot Noir,Bold,90.9
+11.04,Australia,Rosé,Syrah,Light,90.1
+4.55,France,White,Cabernet Sauvignon,Light,90.4
+3.09,Chile,Rosé,Cabernet Sauvignon,Bold,90.0
+14.51,Australia,Rosé,Sauvignon Blanc,Elegant,91.4
+13.92,Australia,Red,Grenache,Light,92.9
+4.13,France,White,Cabernet Sauvignon,Crisp,88.6
+6.06,France,Red,Sangiovese,Complex,94.3
+12.17,Chile,White,Pinot Noir,Crisp,88.1
+25.78,USA,Red,Syrah,Rich,94.4
+20.42,Italy,Rosé,Pinot Noir,Fresh,94.8
+28.41,Chile,Rosé,Pinot Noir,Fresh,87.2
+16.25,France,Rosé,Tempranillo,Light,95.0
+3.12,Australia,White,Riesling,Bold,89.2
+4.86,Spain,Rosé,Pinot Noir,Fresh,87.0
+5.05,France,Rosé,Pinot Noir,Crisp,90.2
+5.54,Italy,Rosé,Pinot Noir,Bold,91.4
+7.97,Australia,White,Sauvignon Blanc,Elegant,90.6
+11.18,Italy,White,Merlot,Rich,90.8
+58.66,France,White,Syrah,Fresh,96.2
+6.96,Chile,Rosé,Cabernet Sauvignon,Light,87.3
+14.05,Argentina,Rosé,Sangiovese,Elegant,91.4
+22.53,Chile,White,Grenache,Elegant,91.7
+24.37,Spain,Rosé,Merlot,Light,91.3
+4.78,France,Rosé,Sauvignon Blanc,Smooth,86.8
+7.26,USA,Red,Cabernet Sauvignon,Bold,90.8
+46.98,Spain,Red,Merlot,Fresh,96.5
+42.53,Argentina,Red,Pinot Noir,Light,93.6
+6.05,Italy,White,Sangiovese,Crisp,86.8
+12.46,France,Red,Riesling,Bold,95.3
+8.44,USA,White,Sangiovese,Fresh,90.0
+23.06,Argentina,White,Riesling,Rich,92.6
+51.22,Chile,Red,Merlot,Fresh,93.7
+3.01,Australia,Red,Riesling,Light,93.4
+6.62,France,Red,Cabernet Sauvignon,Light,88.2
+10.27,Chile,Rosé,Chardonnay,Bold,89.9
+7.23,Italy,White,Sauvignon Blanc,Fresh,91.1
+3.97,Italy,Red,Sauvignon Blanc,Rich,92.2
+18.61,Chile,Rosé,Pinot Noir,Elegant,94.7
+7.79,Australia,Rosé,Syrah,Light,91.1
+18.0,Australia,Rosé,Syrah,Bold,94.9
+8.25,Australia,Red,Sauvignon Blanc,Crisp,89.4
+15.36,USA,Red,Grenache,Rich,98.6
+8.16,Chile,Rosé,Riesling,Rich,93.0
+12.36,France,Red,Cabernet Sauvignon,Fresh,97.4
+23.65,Spain,Rosé,Pinot Noir,Elegant,88.9
+13.9,Italy,Rosé,Cabernet Sauvignon,Smooth,92.4
+17.88,Australia,White,Syrah,Rich,95.9
+26.47,France,White,Chardonnay,Elegant,98.0
+11.69,Italy,Red,Riesling,Elegant,98.6
+2.02,Australia,Rosé,Sangiovese,Bold,88.8
+1.56,Australia,White,Pinot Noir,Crisp,85.1
+47.7,Spain,Red,Chardonnay,Crisp,94.8
+11.14,Chile,Rosé,Grenache,Elegant,91.5
+22.41,Chile,White,Syrah,Rich,92.6
+13.3,USA,Red,Sangiovese,Bold,95.6
+6.47,USA,Rosé,Grenache,Rich,91.7
+43.58,France,White,Tempranillo,Rich,95.5
+92.85,Australia,Rosé,Syrah,Bold,96.1
+28.7,Australia,White,Syrah,Crisp,90.5
+24.09,Spain,White,Merlot,Fresh,87.7
+33.65,France,Rosé,Pinot Noir,Elegant,94.4
+12.12,Chile,Red,Sangiovese,Rich,89.4
+28.92,Chile,White,Merlot,Bold,89.0
+17.4,France,Red,Chardonnay,Elegant,96.7
+13.3,France,Rosé,Cabernet Sauvignon,Complex,97.4
+12.32,Spain,Rosé,Cabernet Sauvignon,Bold,91.0
+29.05,Spain,White,Cabernet Sauvignon,Elegant,93.9
+14.7,Chile,Red,Merlot,Elegant,97.0
+4.75,France,Red,Tempranillo,Fresh,92.5
+6.28,Spain,White,Merlot,Smooth,91.5
+32.39,Spain,Rosé,Sangiovese,Elegant,89.6
+23.34,Spain,Red,Sangiovese,Light,88.5
+33.11,USA,Red,Riesling,Bold,96.8
+3.14,Italy,Rosé,Grenache,Fresh,86.5
+21.14,Australia,Rosé,Chardonnay,Bold,93.0
+25.51,Argentina,Red,Chardonnay,Crisp,91.1
+6.93,Argentina,Rosé,Chardonnay,Bold,86.1
+31.44,France,White,Sauvignon Blanc,Smooth,93.6
+9.17,Chile,Rosé,Tempranillo,Complex,91.9
+11.57,France,White,Syrah,Complex,93.2
+6.45,France,White,Riesling,Crisp,94.0
+5.28,Australia,Red,Merlot,Fresh,89.9
+26.05,Australia,White,Chardonnay,Rich,94.6
+16.89,France,White,Grenache,Smooth,90.2
+14.95,USA,Red,Syrah,Bold,96.4
+2.79,Italy,White,Merlot,Smooth,86.5
+13.71,Australia,Red,Sangiovese,Crisp,90.8
+35.63,Argentina,Rosé,Riesling,Light,88.4
+18.47,Chile,Red,Sangiovese,Rich,92.6
+15.46,Spain,Rosé,Chardonnay,Crisp,86.0
+16.44,Italy,Red,Syrah,Rich,92.5
+5.28,Australia,Rosé,Sangiovese,Light,83.8
+6.44,Italy,Red,Pinot Noir,Elegant,93.6
+26.8,France,Red,Cabernet Sauvignon,Light,93.4
+14.5,USA,White,Sangiovese,Crisp,95.2
+23.41,Argentina,Red,Riesling,Complex,96.5
+8.47,France,Rosé,Grenache,Rich,93.5
+17.18,Argentina,White,Sauvignon Blanc,Elegant,93.1
+5.13,Italy,Rosé,Tempranillo,Bold,92.4
+30.06,Argentina,Rosé,Merlot,Crisp,89.6
+3.96,USA,Red,Merlot,Crisp,90.8
+5.29,Argentina,Rosé,Tempranillo,Fresh,89.9
+14.02,Chile,Red,Merlot,Rich,95.1
+15.08,Chile,White,Tempranillo,Crisp,91.2
+13.01,Spain,Rosé,Tempranillo,Elegant,94.3
+32.41,Australia,White,Sauvignon Blanc,Smooth,91.6
+25.43,Argentina,Red,Grenache,Elegant,95.1
+3.17,Australia,Red,Cabernet Sauvignon,Crisp,84.8
+2.75,Italy,White,Sauvignon Blanc,Rich,89.4
+17.6,Argentina,Red,Cabernet Sauvignon,Rich,92.2
+5.17,Italy,Red,Sauvignon Blanc,Crisp,91.7
+15.17,Argentina,White,Sangiovese,Crisp,89.5
+11.27,USA,Red,Riesling,Bold,94.0
+10.99,France,Red,Grenache,Crisp,91.8
+17.72,Chile,Rosé,Tempranillo,Rich,91.8
+90.14,France,Red,Grenache,Crisp,97.9
+23.03,Spain,Rosé,Riesling,Bold,94.4
+14.33,France,White,Sauvignon Blanc,Light,89.3
+2.02,Spain,Red,Syrah,Crisp,85.7
+18.82,Australia,Rosé,Merlot,Complex,96.0
+10.09,Italy,White,Sauvignon Blanc,Smooth,91.8
+12.61,Spain,White,Pinot Noir,Complex,96.1
+18.84,Australia,Red,Cabernet Sauvignon,Elegant,98.9
+29.41,USA,Red,Syrah,Bold,95.9
+18.21,Italy,Rosé,Riesling,Smooth,93.5
+10.66,Spain,Red,Tempranillo,Fresh,92.0
+6.37,Italy,Red,Cabernet Sauvignon,Rich,94.4
+4.1,USA,Red,Pinot Noir,Complex,95.3
+15.08,Italy,Red,Merlot,Fresh,92.6
+4.72,Australia,Red,Riesling,Smooth,89.3
+18.45,USA,Rosé,Cabernet Sauvignon,Smooth,90.6
+13.55,France,White,Grenache,Complex,94.8
+7.79,Australia,Rosé,Cabernet Sauvignon,Elegant,91.9
+30.24,Spain,White,Tempranillo,Light,90.9
+11.13,USA,Red,Pinot Noir,Bold,91.4
+13.08,Australia,Red,Chardonnay,Complex,97.5
+14.81,Chile,Rosé,Pinot Noir,Rich,89.3
+17.2,Australia,Rosé,Chardonnay,Elegant,93.2
+9.25,Spain,Red,Grenache,Smooth,94.5
+25.89,Spain,Red,Syrah,Complex,98.2
+26.06,Spain,White,Syrah,Rich,92.8
+44.76,Argentina,Rosé,Sauvignon Blanc,Complex,89.6
+14.26,Chile,Rosé,Syrah,Elegant,92.7
+7.09,Chile,Red,Riesling,Elegant,95.5
+24.84,Spain,Red,Cabernet Sauvignon,Complex,93.0
+58.57,Italy,White,Riesling,Complex,97.4
+32.21,USA,White,Syrah,Complex,98.4
+25.84,France,Red,Syrah,Elegant,99.2
+12.15,Chile,Red,Grenache,Complex,91.7
+6.04,Australia,White,Cabernet Sauvignon,Bold,90.7
+10.56,Italy,White,Tempranillo,Light,89.2
+26.87,Italy,White,Tempranillo,Smooth,94.8
+15.19,Spain,Rosé,Riesling,Rich,89.8
+51.91,Italy,White,Chardonnay,Elegant,97.6
+9.32,Spain,White,Grenache,Elegant,97.3
+64.08,France,White,Merlot,Elegant,96.9
+48.7,France,Red,Pinot Noir,Light,97.9
+9.18,Australia,Red,Tempranillo,Bold,88.4
+11.95,Italy,White,Merlot,Crisp,95.2
+12.56,Italy,Rosé,Pinot Noir,Bold,92.3
+9.92,Chile,Red,Grenache,Bold,88.3
+16.56,USA,White,Chardonnay,Smooth,94.7
+3.49,Australia,White,Chardonnay,Light,91.5
+34.94,Argentina,White,Pinot Noir,Crisp,92.0
+5.99,Spain,Red,Merlot,Complex,90.9
+8.23,Italy,White,Tempranillo,Light,91.5
+15.78,Australia,Red,Riesling,Smooth,91.9
+44.17,Argentina,Red,Chardonnay,Light,89.3
+15.1,France,Red,Merlot,Crisp,92.0
+4.32,USA,Red,Tempranillo,Fresh,93.3
+17.23,Chile,White,Grenache,Bold,91.1
+27.03,France,Red,Chardonnay,Complex,97.6
+40.47,Chile,Red,Sauvignon Blanc,Fresh,95.1
+9.42,France,Rosé,Riesling,Smooth,95.6
+8.06,Chile,White,Syrah,Fresh,89.3
+4.53,Australia,Red,Sauvignon Blanc,Rich,92.3
+7.61,Italy,Red,Merlot,Complex,95.1
+3.54,Spain,White,Tempranillo,Smooth,89.5
+5.19,Chile,Red,Chardonnay,Complex,92.5
+12.82,Italy,Red,Cabernet Sauvignon,Fresh,93.3
+7.4,Australia,Rosé,Riesling,Fresh,92.8
+24.44,Italy,Rosé,Grenache,Elegant,95.4
+83.32,Argentina,Red,Sangiovese,Rich,95.7
+29.5,Spain,Rosé,Sauvignon Blanc,Complex,97.1
+6.57,USA,White,Merlot,Complex,94.4
+27.22,France,Red,Syrah,Crisp,94.1
+10.02,Chile,White,Pinot Noir,Elegant,93.5
+22.92,France,White,Riesling,Fresh,93.5
+4.38,Australia,Rosé,Syrah,Rich,85.7
+7.31,USA,White,Grenache,Crisp,87.3
+45.31,Italy,White,Syrah,Crisp,95.6
+20.04,Italy,White,Sauvignon Blanc,Bold,94.1
+4.83,Italy,Red,Chardonnay,Fresh,88.1
+27.6,Chile,White,Sauvignon Blanc,Fresh,87.3
+25.36,Australia,Rosé,Syrah,Smooth,91.1
+10.47,Italy,White,Chardonnay,Complex,95.8
+62.76,Australia,Rosé,Pinot Noir,Complex,96.8
+25.4,Italy,White,Cabernet Sauvignon,Bold,91.3
+5.55,Spain,Rosé,Grenache,Fresh,88.0
+53.37,France,White,Grenache,Complex,99.4
+11.99,Argentina,White,Cabernet Sauvignon,Smooth,91.1
+13.47,Spain,Red,Tempranillo,Elegant,93.3
+12.67,France,White,Syrah,Fresh,93.2
+3.97,Australia,White,Sangiovese,Complex,95.3
+4.5,Australia,White,Sangiovese,Crisp,86.6
+17.26,France,White,Pinot Noir,Smooth,95.5
+10.02,Australia,Rosé,Cabernet Sauvignon,Crisp,86.4
+11.42,Australia,Red,Riesling,Complex,97.1
+5.2,Argentina,Rosé,Grenache,Rich,86.8
+39.16,Chile,Red,Merlot,Complex,93.0
+16.97,Spain,White,Riesling,Bold,91.1
+26.61,Argentina,White,Pinot Noir,Smooth,93.8
+19.21,Argentina,Red,Chardonnay,Complex,98.2
+30.1,France,Red,Riesling,Rich,100.0
+5.38,USA,White,Sauvignon Blanc,Smooth,94.5
+14.69,Chile,White,Pinot Noir,Elegant,89.3
+10.0,Chile,White,Merlot,Fresh,86.5
+3.67,Spain,White,Tempranillo,Elegant,87.9
+24.4,Italy,Red,Syrah,Fresh,90.8
+5.86,France,Rosé,Cabernet Sauvignon,Complex,93.7
+29.17,Chile,Red,Tempranillo,Smooth,94.0
+24.34,France,Red,Sauvignon Blanc,Smooth,96.9
+6.69,Argentina,Red,Sauvignon Blanc,Complex,93.3
+4.52,Australia,White,Chardonnay,Rich,90.1
+7.06,France,Red,Merlot,Crisp,89.6
+12.78,Spain,White,Tempranillo,Light,86.9
+16.62,Spain,White,Riesling,Smooth,96.6
+8.95,Argentina,Red,Grenache,Elegant,93.3
+8.58,Italy,White,Riesling,Crisp,92.6
+7.14,France,Rosé,Sauvignon Blanc,Crisp,91.9
+18.71,Italy,White,Chardonnay,Light,90.1
+29.04,France,Red,Riesling,Rich,97.7
+11.94,Chile,White,Chardonnay,Crisp,90.6
+6.43,Australia,White,Chardonnay,Rich,91.4
+11.17,USA,Red,Chardonnay,Light,91.7
+21.77,Australia,Rosé,Merlot,Smooth,90.2
+4.26,Australia,Rosé,Merlot,Light,83.8
+11.44,Italy,Red,Sangiovese,Fresh,89.9
+7.46,USA,Red,Chardonnay,Smooth,91.4
+3.57,USA,White,Tempranillo,Light,90.4
+4.08,Argentina,Rosé,Riesling,Elegant,88.4
+8.8,Australia,White,Tempranillo,Light,87.0
+10.11,Chile,Rosé,Sauvignon Blanc,Light,85.5
+5.5,Australia,Red,Sauvignon Blanc,Light,90.6
+5.5,USA,Rosé,Sauvignon Blanc,Smooth,89.3
+7.03,Chile,White,Chardonnay,Complex,91.0
+10.61,France,Red,Chardonnay,Bold,98.1
+39.53,Australia,Red,Syrah,Complex,96.9
+7.13,France,White,Cabernet Sauvignon,Light,93.0
+11.36,Australia,Rosé,Tempranillo,Light,89.2
+5.7,France,Rosé,Cabernet Sauvignon,Smooth,86.2
+27.35,Australia,Red,Tempranillo,Bold,94.4
+22.98,Spain,Rosé,Sangiovese,Rich,94.7
+4.15,Spain,Rosé,Pinot Noir,Fresh,85.9
+7.47,Italy,Red,Sauvignon Blanc,Elegant,96.4
+6.43,USA,Red,Sangiovese,Complex,94.4
+6.12,France,Red,Syrah,Light,89.9
+26.31,Italy,Red,Chardonnay,Smooth,94.4
+5.43,Australia,Red,Merlot,Crisp,89.2
+6.28,Spain,White,Grenache,Rich,91.1
+8.09,USA,Red,Pinot Noir,Elegant,92.7
+4.62,Argentina,Red,Syrah,Fresh,91.3
+23.81,Australia,White,Sangiovese,Elegant,92.7
+24.8,USA,Rosé,Riesling,Elegant,95.9
+16.77,Spain,White,Pinot Noir,Fresh,90.3
+18.09,Spain,Red,Cabernet Sauvignon,Complex,97.2
+6.13,Argentina,Red,Tempranillo,Smooth,90.1
+34.19,Argentina,White,Grenache,Complex,96.4
+19.64,Spain,Red,Chardonnay,Complex,97.5
+14.82,Italy,Rosé,Syrah,Light,90.0
+22.36,Spain,Rosé,Merlot,Rich,93.4
+21.1,USA,White,Grenache,Light,87.7
+15.64,Chile,White,Syrah,Light,90.1
+22.63,Spain,Rosé,Tempranillo,Elegant,95.5
+6.34,USA,White,Sangiovese,Elegant,88.5
+3.13,Australia,White,Sangiovese,Fresh,91.2
+30.98,USA,Red,Tempranillo,Fresh,93.7
+71.62,Australia,White,Tempranillo,Smooth,94.0
+63.38,Italy,White,Merlot,Crisp,96.7
+22.71,France,Rosé,Pinot Noir,Elegant,94.1
+28.62,Italy,White,Sauvignon Blanc,Fresh,95.4
+13.0,Australia,White,Tempranillo,Rich,94.7
+6.21,USA,Red,Syrah,Smooth,91.4
+6.03,Chile,Rosé,Riesling,Fresh,86.5
+9.05,France,White,Sauvignon Blanc,Rich,95.6
+16.2,Spain,Red,Cabernet Sauvignon,Elegant,94.7
+7.99,France,Rosé,Pinot Noir,Bold,93.7
+7.64,Australia,Red,Sauvignon Blanc,Light,87.5
+13.81,Italy,White,Tempranillo,Fresh,92.9
+1.23,France,White,Syrah,Elegant,90.1
+8.4,France,Rosé,Chardonnay,Complex,93.6
+9.44,USA,White,Riesling,Smooth,91.5
+5.68,Chile,White,Riesling,Fresh,86.6
+40.21,USA,Red,Chardonnay,Complex,97.8
+13.51,Spain,Red,Sauvignon Blanc,Smooth,91.2
+28.7,Chile,Rosé,Merlot,Complex,92.3
+14.84,Argentina,Rosé,Sauvignon Blanc,Light,88.6
+17.99,Chile,Red,Sauvignon Blanc,Light,91.9
+6.23,France,Rosé,Pinot Noir,Rich,92.9
+7.49,France,Rosé,Riesling,Fresh,94.3
+16.44,Australia,White,Grenache,Crisp,90.7
+14.03,France,White,Riesling,Elegant,94.5
+5.17,Australia,Red,Merlot,Elegant,86.4
+17.27,Italy,Rosé,Tempranillo,Elegant,95.5
+25.93,Chile,Rosé,Grenache,Crisp,88.1
+7.27,USA,White,Chardonnay,Elegant,91.4
+16.22,USA,White,Syrah,Complex,93.9
+24.69,France,White,Chardonnay,Crisp,93.3
+15.47,France,Rosé,Merlot,Crisp,90.0
+13.34,USA,Red,Chardonnay,Bold,91.3
+31.52,Argentina,Rosé,Sangiovese,Light,91.0
+17.95,USA,White,Tempranillo,Complex,94.1
+9.32,Australia,Rosé,Sauvignon Blanc,Smooth,88.7
+6.13,France,Rosé,Tempranillo,Bold,93.9
+30.54,USA,White,Grenache,Fresh,96.7
+6.11,Australia,Red,Pinot Noir,Rich,92.3
+8.01,Spain,Red,Syrah,Smooth,88.6
+15.2,France,Red,Sangiovese,Light,94.9
+13.56,Chile,White,Sauvignon Blanc,Smooth,90.4
+7.75,France,Rosé,Merlot,Light,89.3
+4.89,Chile,Red,Sauvignon Blanc,Smooth,93.2
+16.83,Spain,Red,Chardonnay,Bold,93.6
+4.74,USA,Rosé,Tempranillo,Elegant,93.5
+8.83,Argentina,Rosé,Pinot Noir,Smooth,89.4
+9.31,Argentina,Rosé,Sauvignon Blanc,Crisp,88.3
+8.15,USA,White,Chardonnay,Smooth,94.1
+21.05,USA,Red,Merlot,Crisp,91.9
+15.15,Argentina,Rosé,Merlot,Complex,93.7
+4.26,Australia,White,Pinot Noir,Crisp,86.7
+7.94,Chile,White,Riesling,Fresh,89.0
+16.62,Chile,Rosé,Pinot Noir,Light,87.2
+23.92,Australia,Rosé,Syrah,Crisp,91.3
+19.21,Spain,Rosé,Chardonnay,Elegant,97.4
+8.99,USA,Red,Syrah,Complex,94.8
+3.13,Chile,Rosé,Sauvignon Blanc,Crisp,86.3
+22.12,France,Rosé,Chardonnay,Smooth,91.4
+17.16,Chile,White,Syrah,Complex,95.5
+21.92,Chile,Rosé,Merlot,Bold,89.9
+6.77,USA,Red,Pinot Noir,Smooth,91.9
+15.06,France,White,Sangiovese,Complex,97.7
+20.55,Argentina,White,Syrah,Crisp,95.4
+10.91,Australia,Rosé,Riesling,Smooth,91.7
+19.37,Argentina,Rosé,Chardonnay,Elegant,94.3
+5.95,Spain,Rosé,Syrah,Rich,87.7
+7.4,Chile,Red,Merlot,Rich,87.9
+13.26,Spain,Rosé,Grenache,Rich,90.2
+3.93,Spain,White,Pinot Noir,Complex,86.5
+5.96,Australia,Red,Riesling,Rich,90.2
+29.01,France,White,Grenache,Crisp,92.6
+7.66,France,Red,Pinot Noir,Crisp,93.8
+28.81,Australia,Rosé,Pinot Noir,Crisp,90.8
+8.85,France,Rosé,Sangiovese,Complex,93.1
+4.73,Australia,Red,Grenache,Fresh,91.8
+23.3,France,Rosé,Chardonnay,Light,93.4
+23.45,France,Rosé,Chardonnay,Light,89.9
+14.22,USA,Red,Cabernet Sauvignon,Smooth,91.7
+10.18,Argentina,White,Syrah,Light,87.3
+31.22,Italy,White,Merlot,Crisp,89.4
+14.37,USA,Rosé,Chardonnay,Elegant,94.8
+12.76,Italy,Red,Syrah,Elegant,93.6
+1.71,Argentina,Red,Grenache,Bold,91.2
+13.84,Argentina,Red,Tempranillo,Complex,92.2
+26.46,Chile,Rosé,Merlot,Smooth,91.4
+4.69,Australia,White,Grenache,Elegant,92.9
+37.11,Spain,Rosé,Syrah,Fresh,91.7
+11.44,Argentina,White,Sangiovese,Smooth,89.2
+5.03,France,Red,Chardonnay,Crisp,90.8
+12.68,USA,Rosé,Cabernet Sauvignon,Rich,91.8
+26.36,Italy,White,Cabernet Sauvignon,Fresh,96.8
+6.37,Australia,White,Sangiovese,Complex,93.6
+18.86,USA,White,Riesling,Crisp,91.9
+5.06,Italy,White,Sauvignon Blanc,Elegant,91.5
+12.64,Australia,White,Sauvignon Blanc,Crisp,90.0
+14.76,USA,Red,Cabernet Sauvignon,Bold,96.2
+3.55,Chile,Red,Sauvignon Blanc,Rich,86.6
+48.72,Chile,Red,Tempranillo,Crisp,97.2
+28.5,Australia,Rosé,Grenache,Rich,91.8
+61.97,Australia,Rosé,Tempranillo,Smooth,93.4
+26.29,Australia,Rosé,Merlot,Crisp,86.9
+20.18,Spain,White,Sangiovese,Elegant,92.7
+58.47,Australia,Rosé,Sauvignon Blanc,Complex,98.4
+11.89,USA,White,Pinot Noir,Fresh,90.8
+15.07,USA,White,Sauvignon Blanc,Elegant,98.0
+9.12,France,Red,Grenache,Smooth,94.0
+5.89,USA,White,Tempranillo,Light,89.6
+164.63,Chile,Rosé,Syrah,Crisp,90.7
+28.36,Chile,Rosé,Merlot,Smooth,91.1
+18.48,USA,Rosé,Pinot Noir,Complex,96.1
+5.37,Argentina,White,Pinot Noir,Crisp,85.8
+21.72,Italy,White,Riesling,Crisp,90.4
+12.98,Chile,Red,Merlot,Rich,94.3
+5.96,France,White,Pinot Noir,Crisp,89.2
+11.03,Australia,Red,Sauvignon Blanc,Bold,92.1
+23.11,France,Rosé,Cabernet Sauvignon,Smooth,94.8
+7.42,Argentina,Red,Merlot,Elegant,92.6
+26.3,Argentina,White,Pinot Noir,Complex,92.3
+13.27,Australia,White,Pinot Noir,Crisp,89.9
+16.65,France,Rosé,Merlot,Light,93.2
+10.92,Italy,White,Grenache,Bold,89.5
+5.05,Italy,Rosé,Pinot Noir,Complex,93.5
+6.48,Argentina,Rosé,Riesling,Bold,87.8
+30.58,France,Red,Sauvignon Blanc,Bold,97.4
+3.25,France,Red,Riesling,Fresh,93.8
+12.26,Chile,White,Grenache,Smooth,92.0
+7.25,Italy,White,Merlot,Smooth,91.3
+6.6,Argentina,White,Chardonnay,Bold,87.7
+14.6,USA,Rosé,Merlot,Light,91.2
+19.01,France,Red,Syrah,Fresh,96.5
+19.07,Italy,White,Riesling,Rich,92.7
+6.13,Spain,Red,Cabernet Sauvignon,Crisp,91.9
+21.82,USA,White,Pinot Noir,Bold,93.2
+2.71,USA,Rosé,Sauvignon Blanc,Rich,86.6
+11.56,France,Rosé,Syrah,Complex,98.9
+6.21,Australia,Red,Sauvignon Blanc,Rich,92.5
+7.19,USA,Rosé,Syrah,Elegant,91.2
+10.5,Spain,Red,Grenache,Rich,89.2
+16.88,USA,Red,Pinot Noir,Fresh,93.4
+15.34,Spain,Red,Tempranillo,Rich,91.8
+14.53,USA,Rosé,Merlot,Complex,91.7
+25.71,Chile,White,Cabernet Sauvignon,Smooth,90.8
+26.49,Italy,Red,Sangiovese,Complex,100.0
+33.77,USA,White,Sauvignon Blanc,Smooth,95.7
+5.93,USA,Red,Pinot Noir,Bold,93.8
+3.02,Australia,White,Sauvignon Blanc,Elegant,90.4
+10.15,France,Rosé,Riesling,Rich,90.6
+9.94,Australia,Rosé,Syrah,Smooth,90.5
+11.16,France,Rosé,Cabernet Sauvignon,Complex,93.8
+6.62,Argentina,White,Syrah,Light,88.1
+9.89,Australia,Red,Cabernet Sauvignon,Fresh,89.0
+2.16,Chile,Rosé,Sauvignon Blanc,Smooth,86.1
+27.72,Spain,Red,Sangiovese,Rich,94.9
+3.52,Australia,White,Chardonnay,Complex,93.1
+11.22,Argentina,Rosé,Grenache,Smooth,85.5
+18.72,USA,White,Syrah,Rich,94.0
+7.17,Italy,Red,Grenache,Rich,91.7
+16.69,Spain,Red,Sauvignon Blanc,Complex,98.5
+4.31,USA,Rosé,Cabernet Sauvignon,Rich,93.1
+10.79,Chile,Red,Syrah,Elegant,93.6
+5.1,Italy,White,Merlot,Fresh,89.9
+17.54,Chile,Red,Riesling,Elegant,93.4
+4.28,Argentina,White,Pinot Noir,Elegant,90.3
+11.63,Australia,Rosé,Cabernet Sauvignon,Rich,93.2
+8.64,Chile,Red,Chardonnay,Crisp,90.5
+1.53,Spain,White,Syrah,Smooth,86.8
+8.68,Spain,Rosé,Tempranillo,Elegant,88.1
+13.88,USA,Rosé,Merlot,Rich,92.3
+12.45,Italy,White,Tempranillo,Complex,96.2
+11.38,USA,Rosé,Cabernet Sauvignon,Crisp,87.4
+5.67,Italy,White,Riesling,Smooth,91.4
+19.98,Italy,Rosé,Sauvignon Blanc,Complex,94.6
+8.23,Argentina,Rosé,Riesling,Bold,90.2
+7.8,USA,Red,Grenache,Smooth,89.2
+6.64,Spain,White,Pinot Noir,Rich,87.7
+4.16,Australia,White,Pinot Noir,Crisp,84.6
+13.2,Chile,Red,Merlot,Bold,93.3
+16.86,Spain,White,Chardonnay,Rich,89.5
+6.9,Australia,Rosé,Grenache,Crisp,86.7
+8.8,Australia,Red,Sangiovese,Crisp,91.7
+2.83,Spain,Rosé,Tempranillo,Fresh,85.6
+37.95,Argentina,White,Chardonnay,Fresh,91.2
+3.92,France,Rosé,Tempranillo,Elegant,92.2
+1.52,Spain,Rosé,Chardonnay,Light,85.2
+7.23,USA,Rosé,Merlot,Rich,93.4
+7.51,USA,Rosé,Sauvignon Blanc,Fresh,89.9
+16.09,France,Red,Syrah,Smooth,93.6
+7.1,Italy,Rosé,Tempranillo,Elegant,92.0
+11.91,Spain,White,Chardonnay,Smooth,90.5
+29.54,USA,Rosé,Syrah,Bold,92.0
+19.55,Chile,White,Sauvignon Blanc,Rich,94.7
+6.15,France,White,Riesling,Smooth,89.8
+39.17,France,Rosé,Tempranillo,Fresh,90.9
+13.55,France,Rosé,Grenache,Elegant,90.7
+20.5,USA,Rosé,Syrah,Crisp,88.0
+8.96,France,Rosé,Syrah,Crisp,90.9
+19.79,Italy,Rosé,Tempranillo,Crisp,90.6
+9.78,Italy,Rosé,Syrah,Rich,92.0
+9.07,USA,Red,Pinot Noir,Rich,92.5
+28.41,Argentina,Red,Tempranillo,Complex,97.6
+1.8,Argentina,White,Cabernet Sauvignon,Crisp,85.0
+8.85,Chile,White,Cabernet Sauvignon,Elegant,92.0
+12.72,Chile,Red,Cabernet Sauvignon,Rich,97.9
+1.88,Australia,Rosé,Riesling,Complex,92.0
+18.06,Spain,Rosé,Grenache,Rich,90.7
+8.31,Argentina,White,Sangiovese,Elegant,89.5
+28.44,Argentina,White,Sangiovese,Fresh,92.9
+32.12,Spain,Rosé,Merlot,Smooth,92.5
+9.07,France,White,Sauvignon Blanc,Crisp,91.7
+9.09,Chile,Red,Sauvignon Blanc,Rich,88.9
+15.06,Spain,Red,Merlot,Complex,97.3
+32.79,Spain,White,Tempranillo,Smooth,90.7
+7.79,Argentina,Rosé,Riesling,Bold,89.8
+9.63,Italy,Rosé,Grenache,Rich,90.5
+4.21,Chile,White,Sauvignon Blanc,Smooth,88.0
+40.89,Italy,Red,Cabernet Sauvignon,Crisp,93.2
+6.44,Spain,White,Merlot,Rich,90.8
+22.07,Italy,White,Riesling,Light,94.9
+6.84,Australia,Rosé,Riesling,Smooth,89.2
+7.87,USA,Rosé,Chardonnay,Crisp,88.6
+4.31,Italy,White,Pinot Noir,Elegant,93.6
+23.32,France,White,Syrah,Crisp,91.0
+20.58,Australia,Red,Pinot Noir,Light,89.0
+68.32,Spain,White,Pinot Noir,Complex,95.5
+3.84,Australia,Red,Cabernet Sauvignon,Bold,93.5
+3.58,USA,Rosé,Cabernet Sauvignon,Light,88.6
+29.95,Italy,White,Riesling,Rich,94.1
+47.45,Italy,Rosé,Chardonnay,Crisp,92.7
+15.01,Spain,Red,Grenache,Crisp,92.0
+49.39,France,Red,Grenache,Light,98.6
+8.15,France,Red,Tempranillo,Fresh,93.7
+6.51,Australia,Rosé,Merlot,Complex,90.4
+5.59,Chile,White,Cabernet Sauvignon,Crisp,83.7
+3.08,Argentina,White,Merlot,Elegant,91.8
+10.94,Argentina,Red,Sangiovese,Elegant,88.0
+15.87,Argentina,Rosé,Sangiovese,Crisp,83.6
+8.89,Australia,White,Syrah,Fresh,93.3
+6.5,Chile,Red,Syrah,Light,86.0
+10.13,Australia,White,Riesling,Light,92.5
+165.4,Spain,Red,Merlot,Light,96.1
+40.42,Italy,Red,Chardonnay,Elegant,97.4
+7.01,Chile,Rosé,Cabernet Sauvignon,Fresh,87.9
+21.97,Australia,Red,Sauvignon Blanc,Rich,93.9
+18.81,Argentina,Rosé,Chardonnay,Crisp,86.8
+9.35,USA,Rosé,Sangiovese,Light,88.2
+2.19,Argentina,White,Chardonnay,Complex,90.6
+7.14,Argentina,Red,Chardonnay,Elegant,93.9
+13.05,Argentina,Red,Cabernet Sauvignon,Bold,87.7
+8.33,France,White,Sauvignon Blanc,Light,93.3
+9.4,Spain,White,Syrah,Fresh,92.1
+5.04,Australia,Rosé,Chardonnay,Fresh,89.0
+1.34,Argentina,Red,Merlot,Bold,86.7
+13.33,Chile,White,Cabernet Sauvignon,Elegant,95.7
+9.73,Italy,Rosé,Pinot Noir,Smooth,91.4
+9.94,Spain,White,Tempranillo,Fresh,89.9
+6.35,Chile,Rosé,Sangiovese,Complex,88.9
+11.81,France,White,Cabernet Sauvignon,Crisp,92.4
+6.19,Italy,Red,Merlot,Light,94.1
+27.44,Italy,Red,Cabernet Sauvignon,Bold,95.1
+9.31,Italy,Red,Tempranillo,Bold,91.9
+24.21,Argentina,White,Cabernet Sauvignon,Fresh,90.9
+9.59,France,Rosé,Syrah,Crisp,90.4
+99.15,Australia,Rosé,Grenache,Smooth,92.0
+16.12,France,Red,Syrah,Elegant,97.7
+11.68,Spain,White,Syrah,Fresh,93.4
+4.24,Italy,Red,Pinot Noir,Crisp,89.5
+10.51,Italy,Rosé,Merlot,Complex,92.3
+11.93,Argentina,Red,Sangiovese,Smooth,89.8
+13.79,France,Red,Merlot,Light,95.6
+15.4,USA,Red,Grenache,Bold,94.5
+6.68,Chile,Rosé,Tempranillo,Elegant,89.6
+3.81,Spain,White,Merlot,Elegant,87.9
+8.92,Argentina,White,Sangiovese,Fresh,91.5
+13.24,France,White,Grenache,Bold,93.0
+2.15,Italy,Red,Pinot Noir,Bold,91.1
+20.8,Spain,Rosé,Syrah,Fresh,89.2
+15.44,France,Rosé,Pinot Noir,Bold,94.4
+22.81,Australia,Red,Riesling,Elegant,95.9
+11.31,Australia,Rosé,Riesling,Complex,90.4
+7.36,Australia,Rosé,Merlot,Elegant,89.0
+16.76,Spain,Rosé,Cabernet Sauvignon,Light,90.9
+5.89,Italy,Rosé,Merlot,Elegant,94.6
+7.2,Chile,Red,Pinot Noir,Elegant,93.7
+6.36,Chile,Red,Sauvignon Blanc,Light,90.2
+24.99,Argentina,White,Grenache,Fresh,88.9
+19.91,Argentina,Rosé,Riesling,Complex,94.0
+15.0,USA,Red,Sangiovese,Rich,93.3
+3.13,Australia,Red,Pinot Noir,Fresh,88.8
+7.92,Italy,White,Syrah,Complex,94.3
+12.86,Argentina,Red,Tempranillo,Complex,91.2
+7.13,Spain,Red,Riesling,Bold,92.5
+22.32,Italy,Rosé,Pinot Noir,Fresh,93.4
+11.27,France,Rosé,Chardonnay,Crisp,89.8
+32.2,Spain,White,Sauvignon Blanc,Crisp,90.7
+14.76,USA,Rosé,Grenache,Crisp,91.4
+11.0,Australia,White,Pinot Noir,Rich,93.1
+14.22,Spain,Rosé,Merlot,Light,88.1
+14.69,Spain,Rosé,Sangiovese,Crisp,87.2
+10.33,Australia,Rosé,Sauvignon Blanc,Crisp,89.8
+9.58,Chile,Red,Grenache,Smooth,84.7
+12.25,Spain,Red,Merlot,Crisp,92.4
+5.22,Argentina,Rosé,Sauvignon Blanc,Smooth,90.3
+58.56,Argentina,Red,Syrah,Elegant,96.1
+6.73,Argentina,Red,Sangiovese,Smooth,88.8
+13.12,France,Red,Merlot,Smooth,93.1
+10.56,Chile,White,Riesling,Crisp,86.2
+17.3,Australia,Red,Merlot,Bold,94.0
+17.39,Chile,White,Sangiovese,Smooth,92.8
+8.39,Australia,White,Cabernet Sauvignon,Complex,93.0
+4.01,Chile,White,Tempranillo,Complex,92.1
+20.16,Argentina,Red,Pinot Noir,Crisp,89.4
+15.35,Argentina,Rosé,Sauvignon Blanc,Elegant,91.6
+9.18,Australia,Rosé,Cabernet Sauvignon,Rich,88.7
+10.33,Italy,Rosé,Grenache,Light,88.2
+7.08,Italy,Rosé,Sauvignon Blanc,Smooth,89.8
+11.6,Argentina,Rosé,Sangiovese,Bold,90.9
+8.25,Argentina,Red,Chardonnay,Bold,90.5
+24.07,Chile,Red,Riesling,Light,94.4
+4.79,Spain,White,Tempranillo,Rich,90.2
+15.65,Italy,Red,Tempranillo,Light,92.4
+6.1,Chile,Red,Syrah,Complex,89.9
+14.5,France,Rosé,Grenache,Fresh,92.4
+41.0,USA,White,Sauvignon Blanc,Light,94.1
+65.67,USA,White,Pinot Noir,Smooth,94.6
+26.08,Italy,Rosé,Tempranillo,Smooth,91.8
+17.24,Australia,Red,Cabernet Sauvignon,Rich,88.4
+15.02,France,White,Riesling,Smooth,90.9
+6.03,Argentina,White,Sangiovese,Smooth,90.5
+14.67,Spain,Red,Riesling,Light,90.9
+14.45,Chile,Rosé,Sangiovese,Elegant,93.0
+9.21,Spain,White,Pinot Noir,Complex,91.4
+13.37,Argentina,Red,Sauvignon Blanc,Elegant,91.5
+13.58,USA,Rosé,Riesling,Smooth,87.9
+18.69,Australia,Red,Riesling,Smooth,95.3
+2.29,France,White,Sangiovese,Light,87.5
+21.35,Argentina,Rosé,Tempranillo,Bold,91.5
+43.5,Argentina,White,Riesling,Light,91.1
+55.14,Australia,White,Merlot,Bold,95.3
+30.11,Argentina,Red,Sangiovese,Crisp,93.3
+22.52,Italy,Rosé,Sauvignon Blanc,Fresh,92.7
+3.89,France,Red,Riesling,Fresh,93.3
+3.52,Argentina,Red,Syrah,Rich,88.9
+24.65,Italy,White,Pinot Noir,Crisp,95.5
+56.26,France,White,Sauvignon Blanc,Bold,98.8
+3.87,Australia,Rosé,Riesling,Complex,88.6
+6.85,Spain,Red,Sauvignon Blanc,Crisp,91.3
+32.03,Chile,Rosé,Sangiovese,Elegant,96.3
+24.5,Australia,Rosé,Chardonnay,Smooth,88.4
+20.94,USA,White,Chardonnay,Light,91.6
+26.92,Argentina,White,Pinot Noir,Light,92.7
+6.93,Spain,Red,Grenache,Light,89.0
+12.37,USA,White,Chardonnay,Elegant,94.5
+15.79,Argentina,White,Syrah,Fresh,88.2
+3.26,Chile,White,Grenache,Rich,88.4
+23.57,Italy,Rosé,Pinot Noir,Complex,97.0
+19.16,France,Rosé,Pinot Noir,Smooth,94.3
+8.88,Argentina,White,Tempranillo,Fresh,90.5
+33.68,USA,Rosé,Tempranillo,Complex,94.6
+6.3,Chile,Rosé,Grenache,Bold,87.5
+32.41,Chile,Red,Cabernet Sauvignon,Smooth,92.4
+11.59,Italy,White,Chardonnay,Fresh,88.2
+4.63,France,White,Sauvignon Blanc,Elegant,92.6
+9.76,Argentina,Rosé,Chardonnay,Crisp,89.0
+56.12,Spain,White,Grenache,Rich,96.7
+23.37,Italy,Red,Sauvignon Blanc,Fresh,92.9
+6.79,Chile,Red,Sauvignon Blanc,Rich,90.3
+14.19,USA,Rosé,Tempranillo,Light,90.8
+20.95,Australia,Red,Riesling,Smooth,94.7
+11.56,Argentina,White,Tempranillo,Fresh,90.8
+13.51,Argentina,White,Sangiovese,Bold,90.6
+3.92,Argentina,White,Riesling,Light,88.0
+17.18,Chile,Rosé,Sangiovese,Elegant,92.6
+7.64,Italy,Red,Cabernet Sauvignon,Elegant,96.1
+3.61,Chile,Rosé,Sangiovese,Bold,81.9
+40.26,Australia,Red,Sauvignon Blanc,Complex,98.3
+14.19,France,White,Grenache,Fresh,94.2
+1.66,Chile,Rosé,Merlot,Light,82.7
+18.75,Chile,Red,Tempranillo,Complex,94.4
+12.95,Argentina,Rosé,Pinot Noir,Rich,86.9
+4.58,Spain,White,Sangiovese,Complex,93.4
+3.49,Spain,White,Cabernet Sauvignon,Crisp,90.3
+5.18,Italy,White,Sauvignon Blanc,Complex,89.7
+6.93,Spain,White,Chardonnay,Bold,89.0
+13.19,Italy,Rosé,Pinot Noir,Elegant,90.1
+6.04,Italy,Rosé,Sangiovese,Smooth,87.4
+14.59,France,Rosé,Grenache,Elegant,95.7
+59.85,Australia,Rosé,Merlot,Crisp,92.9
+15.52,Chile,White,Sangiovese,Light,91.0
+8.87,Australia,Rosé,Riesling,Complex,91.8
+3.48,Italy,Red,Sauvignon Blanc,Light,88.7
+2.85,Spain,Rosé,Pinot Noir,Light,87.6
+11.3,France,Rosé,Sauvignon Blanc,Complex,95.7
+28.03,Chile,Red,Chardonnay,Elegant,95.8
+6.92,Spain,White,Pinot Noir,Rich,92.6
+45.59,France,White,Cabernet Sauvignon,Crisp,96.8
+4.33,Argentina,Rosé,Syrah,Smooth,88.1
+14.15,Argentina,Red,Grenache,Elegant,91.2
+25.9,Chile,Rosé,Syrah,Rich,93.7
+28.19,Italy,White,Pinot Noir,Crisp,96.0
+18.05,USA,Red,Grenache,Light,92.1
+2.64,Australia,Rosé,Grenache,Complex,92.6
+11.34,USA,Red,Chardonnay,Fresh,92.8
+85.06,Argentina,Rosé,Tempranillo,Elegant,97.5
+4.81,Argentina,Red,Cabernet Sauvignon,Complex,91.5
+9.05,Italy,White,Sauvignon Blanc,Elegant,93.0
+5.78,Argentina,Red,Chardonnay,Smooth,87.1
+23.19,Argentina,Rosé,Chardonnay,Crisp,91.1
+7.24,Australia,Rosé,Tempranillo,Smooth,87.7
+46.92,Argentina,White,Riesling,Complex,96.4
+8.92,USA,White,Pinot Noir,Fresh,91.7
+7.4,Chile,Red,Chardonnay,Elegant,93.5
+4.43,France,Rosé,Pinot Noir,Crisp,86.8
+24.29,Argentina,Red,Chardonnay,Rich,94.1
+5.68,Australia,Rosé,Sauvignon Blanc,Elegant,90.7
+4.68,Italy,Red,Grenache,Rich,93.9
+24.89,Australia,Rosé,Pinot Noir,Fresh,95.1
+75.59,USA,White,Merlot,Light,93.4
+21.55,Chile,Rosé,Sauvignon Blanc,Fresh,86.4
+25.6,Argentina,Red,Chardonnay,Fresh,93.6
+20.71,Italy,White,Sangiovese,Smooth,91.6
+8.48,Italy,Rosé,Cabernet Sauvignon,Elegant,94.1
+44.64,USA,White,Chardonnay,Elegant,98.4
+21.05,France,Red,Sangiovese,Rich,96.0
+4.47,Chile,Red,Riesling,Rich,91.5
+6.19,Italy,Red,Merlot,Smooth,94.1
+8.72,France,White,Syrah,Light,87.3
+11.59,Italy,Red,Pinot Noir,Smooth,95.4
+11.62,Italy,Rosé,Syrah,Elegant,96.5
+33.27,Australia,Red,Tempranillo,Complex,96.2
+21.62,Australia,White,Sangiovese,Elegant,89.9
+16.46,Chile,White,Chardonnay,Bold,92.2
+14.63,Australia,Red,Cabernet Sauvignon,Bold,89.7
+16.35,Spain,Rosé,Sauvignon Blanc,Smooth,90.9
+6.41,Argentina,Rosé,Riesling,Smooth,87.0
+30.94,Chile,Red,Tempranillo,Elegant,92.4
+6.63,USA,Rosé,Sangiovese,Complex,93.4
+9.01,France,Red,Pinot Noir,Rich,94.9
+4.85,Chile,Rosé,Sangiovese,Bold,88.5
+12.98,France,Red,Riesling,Fresh,95.2
+2.18,Australia,Red,Syrah,Complex,93.3
+9.72,Argentina,Rosé,Tempranillo,Fresh,87.3
+11.56,Chile,White,Pinot Noir,Smooth,90.6
+33.84,Italy,Red,Cabernet Sauvignon,Rich,96.7
+30.5,Australia,Rosé,Cabernet Sauvignon,Crisp,90.8
+23.91,USA,Red,Chardonnay,Rich,97.8
+9.4,Spain,White,Syrah,Elegant,95.1
+11.42,Australia,White,Pinot Noir,Complex,90.0
+11.67,Spain,Red,Syrah,Smooth,89.9
+27.51,Spain,Rosé,Tempranillo,Elegant,94.6
+11.48,Spain,White,Merlot,Crisp,89.6
+7.11,USA,White,Cabernet Sauvignon,Light,86.9
+5.04,Argentina,Rosé,Tempranillo,Bold,88.5
+6.96,Spain,Red,Sauvignon Blanc,Elegant,95.2
+15.74,Australia,Red,Riesling,Elegant,94.9
+32.43,Spain,Red,Tempranillo,Elegant,93.6
+5.57,France,Rosé,Tempranillo,Light,86.5
+17.16,Italy,Red,Riesling,Bold,94.8
+12.97,Chile,Rosé,Cabernet Sauvignon,Crisp,83.9
+2.34,Australia,Red,Sangiovese,Rich,88.3
+2.9,Argentina,Red,Riesling,Smooth,85.4
+5.6,France,White,Tempranillo,Elegant,89.0
+9.61,Italy,White,Syrah,Fresh,90.8
+5.49,Spain,Red,Cabernet Sauvignon,Smooth,90.5
+4.98,France,Rosé,Riesling,Light,88.5
+6.58,Australia,Rosé,Chardonnay,Light,87.2
+59.8,Chile,Red,Merlot,Smooth,94.9
+6.58,Argentina,Rosé,Chardonnay,Bold,87.9
+18.26,USA,White,Riesling,Crisp,94.8
+4.0,Argentina,Rosé,Cabernet Sauvignon,Fresh,84.8
+19.06,Chile,Rosé,Sauvignon Blanc,Light,87.3
+21.02,France,White,Cabernet Sauvignon,Light,93.3
+7.1,Argentina,White,Chardonnay,Fresh,88.1
+7.85,Spain,Rosé,Merlot,Smooth,88.8
+16.3,USA,Rosé,Grenache,Crisp,91.0
+15.81,France,White,Sangiovese,Elegant,97.9
+1.74,Australia,Rosé,Tempranillo,Smooth,83.1
+10.11,France,Red,Grenache,Bold,94.5
+17.24,Australia,White,Sauvignon Blanc,Complex,95.5
+13.81,Italy,Rosé,Tempranillo,Bold,94.7
+6.13,Spain,White,Riesling,Bold,92.3
+6.28,Argentina,Rosé,Sauvignon Blanc,Crisp,85.4
+13.48,Australia,Rosé,Syrah,Smooth,88.7
+8.07,Argentina,Rosé,Tempranillo,Elegant,89.5
+1.46,Italy,Rosé,Sangiovese,Complex,92.5
+21.55,France,Red,Grenache,Elegant,97.0
+3.29,France,Rosé,Riesling,Fresh,89.6
+26.47,Argentina,Red,Pinot Noir,Complex,93.1
+9.57,USA,Red,Chardonnay,Elegant,89.3
+12.7,Argentina,White,Sauvignon Blanc,Rich,92.1
+13.61,Italy,White,Grenache,Fresh,91.2
+9.38,USA,Rosé,Merlot,Fresh,89.0
+31.33,Spain,Rosé,Sauvignon Blanc,Light,89.6
+12.63,USA,Red,Cabernet Sauvignon,Crisp,92.2
+20.93,Chile,Rosé,Merlot,Smooth,93.0
+7.82,Spain,Red,Pinot Noir,Smooth,94.3
+15.99,France,Red,Grenache,Crisp,94.1
+9.97,Chile,Red,Tempranillo,Smooth,88.5
+5.63,Chile,Rosé,Tempranillo,Elegant,92.7
+36.4,Spain,Rosé,Tempranillo,Complex,92.9
+30.39,Argentina,Rosé,Cabernet Sauvignon,Bold,88.4
+95.19,Australia,White,Sangiovese,Crisp,91.4
+7.93,Argentina,White,Chardonnay,Crisp,89.6
+24.62,Australia,Red,Sauvignon Blanc,Light,90.3
+5.06,France,Rosé,Chardonnay,Bold,91.3
+5.8,Italy,White,Syrah,Elegant,93.7
+10.37,Chile,Red,Merlot,Complex,94.3
+14.36,France,Rosé,Merlot,Complex,93.3
+2.11,Australia,Rosé,Cabernet Sauvignon,Smooth,88.9
+11.76,Chile,Rosé,Merlot,Rich,86.4
+27.54,Argentina,Rosé,Syrah,Complex,90.7
+5.34,Italy,Rosé,Cabernet Sauvignon,Light,86.6
+18.43,Italy,White,Syrah,Bold,92.7
+43.88,Chile,Red,Tempranillo,Fresh,96.9
+12.9,USA,White,Sangiovese,Smooth,89.5
+32.64,USA,Rosé,Sangiovese,Rich,90.7
+5.0,France,Rosé,Pinot Noir,Rich,89.2
+11.18,USA,Rosé,Merlot,Fresh,92.8
+17.88,Italy,Red,Grenache,Bold,95.2
+20.48,Argentina,White,Syrah,Elegant,92.3
+6.3,Australia,White,Chardonnay,Complex,91.2
+2.86,USA,Red,Chardonnay,Fresh,88.0
+6.39,Argentina,Rosé,Sangiovese,Complex,87.3
+19.06,Chile,White,Pinot Noir,Bold,92.3
+22.38,Italy,Rosé,Cabernet Sauvignon,Bold,95.3
+31.68,Argentina,White,Tempranillo,Elegant,95.7
+5.5,Spain,White,Chardonnay,Complex,91.7
+4.5,USA,Rosé,Sangiovese,Rich,93.3
+35.63,Argentina,Rosé,Tempranillo,Elegant,91.8
+3.65,France,Rosé,Riesling,Complex,90.3
+9.14,France,Rosé,Tempranillo,Crisp,95.4
+6.96,Chile,White,Tempranillo,Elegant,92.6
+4.92,France,White,Sangiovese,Crisp,92.6
+5.27,Italy,Rosé,Riesling,Bold,90.4
+31.63,Chile,Rosé,Sangiovese,Crisp,87.4
+10.87,Spain,Rosé,Syrah,Bold,91.4
+27.76,Chile,Rosé,Pinot Noir,Elegant,94.4
+23.0,France,Rosé,Riesling,Fresh,92.4
+4.97,Spain,White,Sauvignon Blanc,Rich,89.4
+19.74,France,Rosé,Cabernet Sauvignon,Crisp,90.3
+6.6,Australia,Red,Cabernet Sauvignon,Smooth,86.0
+7.71,Italy,White,Merlot,Fresh,91.8
+10.35,Italy,Rosé,Sangiovese,Fresh,89.5
+27.04,Australia,White,Chardonnay,Rich,92.1
+14.17,Australia,White,Merlot,Elegant,90.0
+8.1,Australia,Red,Riesling,Elegant,93.1
+14.47,Chile,Red,Chardonnay,Bold,91.2
+32.89,Australia,White,Grenache,Complex,95.3
+4.67,Italy,Rosé,Merlot,Smooth,84.4
+2.42,Chile,Red,Tempranillo,Rich,89.1
+22.98,Spain,Red,Sauvignon Blanc,Complex,96.0
+30.11,Italy,Red,Chardonnay,Elegant,96.7
+17.87,Argentina,Red,Riesling,Crisp,92.1
+13.73,France,Rosé,Cabernet Sauvignon,Rich,92.7
+12.52,Italy,Rosé,Cabernet Sauvignon,Smooth,89.0
+22.57,USA,White,Merlot,Fresh,91.6
+6.21,France,Red,Sangiovese,Light,93.5
+46.04,Spain,Rosé,Grenache,Rich,93.0
+15.21,Italy,White,Tempranillo,Complex,95.4
+25.22,USA,White,Cabernet Sauvignon,Smooth,92.0
+8.74,Italy,White,Syrah,Crisp,91.6
+15.63,Spain,White,Chardonnay,Complex,94.3
+4.17,Chile,Rosé,Syrah,Fresh,87.2
+7.43,Australia,White,Chardonnay,Elegant,89.5
+2.32,Italy,Red,Merlot,Fresh,89.5
+25.21,Chile,Rosé,Sangiovese,Fresh,91.4
+14.08,Australia,Red,Pinot Noir,Rich,95.9
+19.47,USA,Rosé,Riesling,Complex,94.1
+9.42,USA,White,Cabernet Sauvignon,Rich,92.0
+13.06,Italy,White,Chardonnay,Elegant,99.1
+4.6,Spain,White,Grenache,Light,88.4
+12.53,Chile,White,Syrah,Smooth,86.1
+6.46,Italy,White,Pinot Noir,Light,90.4
+7.41,Argentina,White,Tempranillo,Fresh,87.9
+10.94,Argentina,Red,Tempranillo,Complex,94.6
+16.12,Italy,Rosé,Grenache,Rich,91.3
+81.79,Chile,Red,Grenache,Crisp,94.1
+4.75,Italy,Red,Syrah,Rich,93.1
+31.36,Argentina,Red,Cabernet Sauvignon,Bold,94.9
+27.91,Argentina,White,Tempranillo,Light,87.8
+32.79,Chile,Red,Cabernet Sauvignon,Light,92.7
+12.91,Spain,Red,Cabernet Sauvignon,Complex,95.5
+37.64,Italy,Rosé,Chardonnay,Light,92.0
+9.37,Argentina,White,Grenache,Rich,92.1
+17.47,Spain,Red,Riesling,Rich,95.1
+7.93,Australia,Red,Merlot,Complex,93.6
+5.21,France,Red,Cabernet Sauvignon,Bold,93.2
+54.62,Italy,Rosé,Sauvignon Blanc,Bold,98.2
+3.05,Italy,Red,Cabernet Sauvignon,Light,88.3
+5.8,Australia,White,Cabernet Sauvignon,Rich,92.7
+12.19,Argentina,Rosé,Syrah,Bold,89.7
+10.05,Australia,Rosé,Pinot Noir,Light,85.3
+10.86,Italy,White,Cabernet Sauvignon,Light,92.3
+8.6,France,White,Pinot Noir,Rich,94.2
+7.52,Argentina,Rosé,Cabernet Sauvignon,Fresh,84.5
+17.56,Chile,White,Chardonnay,Complex,96.4
+9.06,Chile,White,Sangiovese,Bold,90.3
+74.22,USA,Rosé,Syrah,Elegant,95.3
+3.93,Argentina,Red,Grenache,Rich,90.2
+3.67,USA,Red,Grenache,Crisp,89.4
+32.52,France,White,Cabernet Sauvignon,Bold,96.9
+41.53,USA,White,Sauvignon Blanc,Smooth,96.5
+7.37,Italy,Red,Tempranillo,Fresh,91.8
+5.18,USA,White,Chardonnay,Smooth,87.1
+20.85,USA,White,Chardonnay,Elegant,98.1
+2.75,Australia,White,Riesling,Bold,90.8
+27.29,Chile,Red,Pinot Noir,Complex,94.5
+30.93,Chile,Rosé,Sauvignon Blanc,Crisp,89.7
+10.1,Australia,Rosé,Pinot Noir,Light,87.3
+23.54,France,Rosé,Pinot Noir,Bold,95.7
+13.79,Australia,Red,Riesling,Complex,91.6
+13.56,Argentina,White,Tempranillo,Elegant,92.7
+5.71,Argentina,White,Merlot,Rich,90.7
+19.38,France,Rosé,Chardonnay,Light,93.0
+8.87,Chile,Red,Chardonnay,Light,87.2
+16.19,France,White,Merlot,Elegant,96.0
+19.19,Argentina,Red,Syrah,Light,88.8
+2.35,Australia,White,Sauvignon Blanc,Smooth,88.4
+23.78,Italy,Red,Riesling,Light,91.9
+17.37,Italy,White,Tempranillo,Smooth,89.3
+12.23,France,White,Riesling,Elegant,96.6
+11.9,USA,White,Tempranillo,Elegant,92.9
+12.47,Italy,White,Sangiovese,Crisp,90.5
+82.48,Chile,Rosé,Sangiovese,Rich,94.6
+6.63,France,White,Grenache,Elegant,93.5
+8.73,Italy,White,Syrah,Crisp,92.6
+8.55,Chile,Rosé,Tempranillo,Complex,93.9
