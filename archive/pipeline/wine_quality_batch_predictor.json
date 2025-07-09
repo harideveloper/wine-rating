@@ -1,0 +1,400 @@
+{
+  "components": {
+    "comp-batch-predict": {
+      "executorLabel": "exec-batch-predict",
+      "inputDefinitions": {
+        "parameters": {
+          "gcs_model_path": {
+            "parameterType": "STRING"
+          },
+          "input_path": {
+            "parameterType": "STRING"
+          },
+          "output_path": {
+            "parameterType": "STRING"
+          }
+        }
+      },
+      "outputDefinitions": {
+        "parameters": {
+          "Output": {
+            "parameterType": "STRING"
+          }
+        }
+      }
+    },
+    "comp-load-data": {
+      "executorLabel": "exec-load-data",
+      "inputDefinitions": {
+        "parameters": {
+          "data_path": {
+            "parameterType": "STRING"
+          }
+        }
+      },
+      "outputDefinitions": {
+        "artifacts": {
+          "output_data": {
+            "artifactType": {
+              "schemaTitle": "system.Dataset",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        }
+      }
+    },
+    "comp-save-model": {
+      "executorLabel": "exec-save-model",
+      "inputDefinitions": {
+        "artifacts": {
+          "model_input": {
+            "artifactType": {
+              "schemaTitle": "system.Model",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        },
+        "parameters": {
+          "gcs_bucket": {
+            "parameterType": "STRING"
+          },
+          "model_name": {
+            "parameterType": "STRING"
+          }
+        }
+      },
+      "outputDefinitions": {
+        "parameters": {
+          "Output": {
+            "parameterType": "STRING"
+          }
+        }
+      }
+    },
+    "comp-train-model": {
+      "executorLabel": "exec-train-model",
+      "inputDefinitions": {
+        "artifacts": {
+          "input_data": {
+            "artifactType": {
+              "schemaTitle": "system.Dataset",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        },
+        "parameters": {
+          "n_estimators": {
+            "parameterType": "NUMBER_INTEGER"
+          },
+          "random_state": {
+            "parameterType": "NUMBER_INTEGER"
+          }
+        }
+      },
+      "outputDefinitions": {
+        "artifacts": {
+          "model_output": {
+            "artifactType": {
+              "schemaTitle": "system.Model",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        }
+      }
+    },
+    "comp-validate-results": {
+      "executorLabel": "exec-validate-results",
+      "inputDefinitions": {
+        "parameters": {
+          "output_path": {
+            "parameterType": "STRING"
+          }
+        }
+      },
+      "outputDefinitions": {
+        "parameters": {
+          "Output": {
+            "parameterType": "STRING"
+          }
+        }
+      }
+    }
+  },
+  "deploymentSpec": {
+    "executors": {
+      "exec-batch-predict": {
+        "container": {
+          "args": [
+            "--executor_input",
+            "{{$}}",
+            "--function_to_execute",
+            "batch_predict"
+          ],
+          "command": [
+            "sh",
+            "-c",
+            "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'kfp==2.12.1' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&  python3 -m pip install --quiet --no-warn-script-location 'pandas==1.3.5' 'scikit-learn==0.24.2' 'numpy==1.21.6' 'google-cloud-storage' && \"$0\" \"$@\"\n",
+            "sh",
+            "-ec",
+            "program_path=$(mktemp -d)\n\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+            "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef batch_predict(gcs_model_path: str, input_path: str, output_path: str) -> str:\n    \"\"\"Run batch predictions with unique output.\"\"\"\n    import pandas as pd\n    import pickle\n    import json\n    import re\n    import io\n    import datetime\n    import os\n    import hashlib\n    from google.cloud import storage\n\n    # Generate NEW unique run ID for this batch prediction\n    timestamp = datetime.datetime.now().strftime(\"%Y%m%d_%H%M%S\")\n    context = f\"{os.getpid()}_{os.environ.get('HOSTNAME', 'local')}\"\n    hash_suffix = hashlib.md5(context.encode()).hexdigest()[:6]\n    batch_run_id = f\"batch_{timestamp}_{hash_suffix}\"\n\n    client = storage.Client()\n\n    # Load model\n    model_parts = gcs_model_path.replace(\"gs://\", \"\").split(\"/\", 1)\n    bucket = client.bucket(model_parts[0])\n    blob = bucket.blob(model_parts[1])\n    blob.download_to_filename(\"model.pkl\")\n\n    with open(\"model.pkl\", \"rb\") as f:\n        model_data = pickle.load(f)\n        model = model_data['pipeline']\n        training_run_id = model_data['run_id']  # Keep reference to training run\n        features = model_data['features']\n\n    print(f\"INFO: Batch run {batch_run_id} using model from training run {training_run_id}\")\n\n    # Load input data\n    input_parts = input_path.replace(\"gs://\", \"\").split(\"/\", 1)\n    input_bucket = client.bucket(input_parts[0])\n    input_blob = input_bucket.blob(input_parts[1])\n\n    if input_path.endswith('.jsonl'):\n        jsonl_data = input_blob.download_as_text()\n        records = [json.loads(line) for line in jsonl_data.strip().split('\\n') if line.strip()]\n        df = pd.DataFrame(records)\n    else:\n        csv_data = input_blob.download_as_text()\n        df = pd.read_csv(io.StringIO(csv_data))\n\n    # Prepare features\n    categorical_cols = ['Country', 'Type', 'Grape', 'Style']\n    for col in categorical_cols:\n        if col in df.columns:\n            df[col] = df[col].fillna('Unknown')\n\n    def extract_price(price_str):\n        if pd.isna(price_str):\n            return 15.0\n        matches = re.findall(r'(\\d+\\.?\\d*)', str(price_str))\n        return float(matches[0]) if matches else 15.0\n\n    if \"Price\" in df.columns:\n        df[\"price_numeric\"] = df[\"Price\"].apply(extract_price)\n    elif \"price_numeric\" in df.columns:\n        df[\"price_numeric\"] = pd.to_numeric(df[\"price_numeric\"], errors='coerce').fillna(15.0)\n    else:\n        df[\"price_numeric\"] = 15.0\n\n    # Predict\n    X = df[features]\n    predictions = model.predict(X)\n\n    # Save results\n    results = []\n    for i, pred in enumerate(predictions):\n        result = {\n            \"batch_run_id\": batch_run_id,  \n            \"training_run_id\": training_run_id,\n            \"wine_quality_score\": round(float(pred), 2),\n            \"quality_grade\": \"Excellent\" if pred >= 4.5 else \"Good\" if pred >= 4.0 else \"Average\",\n            \"model_path\": gcs_model_path\n        }\n        for feature in features:\n            result[f\"input_{feature}\"] = str(df.iloc[i][feature])\n        results.append(result)\n\n    # Upload results to outputs dir\n    output_parts = output_path.replace(\"gs://\", \"\").split(\"/\", 1)\n    output_bucket = client.bucket(output_parts[0])\n\n    filename = f\"wine_quality_predictions_{batch_run_id}.jsonl\"\n    with open(filename, \"w\") as f:\n        for result in results:\n            f.write(json.dumps(result) + \"\\n\")\n\n    blob_name = f\"{output_parts[1]}/{filename}\" if len(output_parts) > 1 else filename\n    output_bucket.blob(blob_name).upload_from_filename(filename)\n\n    final_path = f\"gs://{output_parts[0]}/{blob_name}\"\n    print(f\"INFO: Batch run {batch_run_id} - {len(predictions)} predictions saved to {final_path}\")\n\n    return final_path\n\n"
+          ],
+          "image": "python:3.9"
+        }
+      },
+      "exec-load-data": {
+        "container": {
+          "args": [
+            "--executor_input",
+            "{{$}}",
+            "--function_to_execute",
+            "load_data"
+          ],
+          "command": [
+            "sh",
+            "-c",
+            "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'kfp==2.12.1' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&  python3 -m pip install --quiet --no-warn-script-location 'pandas' 'google-cloud-storage' && \"$0\" \"$@\"\n",
+            "sh",
+            "-ec",
+            "program_path=$(mktemp -d)\n\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+            "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef load_data(data_path: str, output_data: Output[Dataset]):\n    \"\"\"Load CSV data from GCS.\"\"\"\n    import pandas as pd\n    from google.cloud import storage\n    import io\n    import datetime\n    import os\n    import hashlib\n\n    # Generate unique run ID\n    timestamp = datetime.datetime.now().strftime(\"%Y%m%d_%H%M%S\")\n    context = f\"{os.getpid()}_{os.environ.get('HOSTNAME', 'local')}\"\n    hash_suffix = hashlib.md5(context.encode()).hexdigest()[:6]\n    run_id = f\"wine_quality_{timestamp}_{hash_suffix}\"\n\n    # Load data\n    bucket_name = data_path.replace('gs://', '').split('/')[0]\n    blob_name = '/'.join(data_path.replace('gs://', '').split('/')[1:])\n\n    client = storage.Client()\n    bucket = client.bucket(bucket_name)\n    blob = bucket.blob(blob_name)\n    csv_data = blob.download_as_text()\n    df = pd.read_csv(io.StringIO(csv_data))\n\n    # Save data and run_id\n    df.to_csv(output_data.path, index=False)\n    output_data.metadata[\"run_id\"] = run_id\n\n    print(f\"INFO: Run {run_id} - Loaded {len(df)} records\")\n\n"
+          ],
+          "image": "python:3.9"
+        }
+      },
+      "exec-save-model": {
+        "container": {
+          "args": [
+            "--executor_input",
+            "{{$}}",
+            "--function_to_execute",
+            "save_model"
+          ],
+          "command": [
+            "sh",
+            "-c",
+            "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'kfp==2.12.1' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&  python3 -m pip install --quiet --no-warn-script-location 'google-cloud-storage' && \"$0\" \"$@\"\n",
+            "sh",
+            "-ec",
+            "program_path=$(mktemp -d)\n\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+            "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef save_model(model_input: Input[Model], gcs_bucket: str, model_name: str) -> str:\n    \"\"\"Save model to GCS with unique path.\"\"\"\n    from google.cloud import storage\n\n    run_id = model_input.metadata.get(\"run_id\", \"unknown\")\n    source_file = model_input.path + \".pkl\"\n\n    # Upload to unique path\n    gcs_path = f\"gs://{gcs_bucket}/models/{model_name}/{run_id}/wine_quality_model.pkl\"\n\n    client = storage.Client()\n    bucket_name = gcs_bucket\n    blob_name = f\"models/{model_name}/{run_id}/wine_quality_model.pkl\"\n\n    bucket = client.bucket(bucket_name)\n    blob = bucket.blob(blob_name)\n    blob.upload_from_filename(source_file)\n\n    print(f\"INFO: Run {run_id} - Model saved to {gcs_path}\")\n    return gcs_path\n\n"
+          ],
+          "image": "python:3.9"
+        }
+      },
+      "exec-train-model": {
+        "container": {
+          "args": [
+            "--executor_input",
+            "{{$}}",
+            "--function_to_execute",
+            "train_model"
+          ],
+          "command": [
+            "sh",
+            "-c",
+            "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'kfp==2.12.1' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&  python3 -m pip install --quiet --no-warn-script-location 'pandas==1.3.5' 'scikit-learn==0.24.2' 'numpy==1.21.6' && \"$0\" \"$@\"\n",
+            "sh",
+            "-ec",
+            "program_path=$(mktemp -d)\n\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+            "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef train_model(input_data: Input[Dataset], model_output: Output[Model], random_state: int, n_estimators: int):\n    \"\"\"Train wine quality prediction model.\"\"\"\n    import pandas as pd\n    import numpy as np\n    import pickle\n    import re\n    from sklearn.ensemble import RandomForestRegressor\n    from sklearn.preprocessing import OneHotEncoder\n    from sklearn.compose import ColumnTransformer\n    from sklearn.pipeline import Pipeline\n\n    run_id = input_data.metadata.get(\"run_id\", \"unknown\")\n    df = pd.read_csv(input_data.path)\n\n    print(f\"INFO: Run {run_id} - Training on {len(df)} records\")\n    print(f\"INFO: Using random_state={random_state}, n_estimators={n_estimators}\")\n\n    # Prepare categorical data\n    categorical_cols = ['Country', 'Type', 'Grape', 'Style']\n    for col in categorical_cols:\n        if col in df.columns:\n            df[col] = df[col].fillna('Unknown')\n\n    # Extract price\n    def extract_price(price_str):\n        if pd.isna(price_str):\n            return 15.0\n        matches = re.findall(r'(\\d+\\.?\\d*)', str(price_str))\n        return float(matches[0]) if matches else 15.0\n\n    df[\"price_numeric\"] = df[\"Price\"].apply(extract_price) if \"Price\" in df.columns else 15.0\n\n    # Create quality ratings with variation\n    np.random.seed(random_state)  # Use parameter\n    base_rating = 3.2 + (df['price_numeric'] * 0.03)\n\n    country_bonus = df['Country'].map({\n        'France': 0.5, 'Italy': 0.3, 'Spain': 0.2, 'Germany': 0.3, 'USA': 0.2, 'Australia': 0.1\n    }).fillna(0.1)\n\n    type_bonus = df['Type'].map({'Red': 0.2, 'White': 0.1, 'Sparkling': 0.3}).fillna(0.1)\n    noise = np.random.normal(0, 0.2, len(df))\n\n    df['Quality'] = np.clip(base_rating + country_bonus + type_bonus + noise, 3.0, 5.0)\n\n    # Build and train model\n    features = ['price_numeric'] + [col for col in categorical_cols if col in df.columns]\n\n    transformers = [('num', 'passthrough', [0])]\n    if len(features) > 1:\n        transformers.append(('cat', OneHotEncoder(handle_unknown='ignore', sparse=False), list(range(1, len(features)))))\n\n    pipeline = Pipeline([\n        ('prep', ColumnTransformer(transformers, remainder='drop')),\n        ('model', RandomForestRegressor(n_estimators=n_estimators, random_state=random_state))  # Use parameters\n    ])\n\n    pipeline.fit(df[features], df['Quality'])\n\n    # Save model with metadata\n    model_data = {'pipeline': pipeline, 'run_id': run_id, 'features': features}\n    with open(model_output.path + \".pkl\", 'wb') as f:\n        pickle.dump(model_data, f)\n\n    model_output.metadata[\"run_id\"] = run_id\n    print(f\"INFO: Run {run_id} - Model trained successfully!\")\n\n"
+          ],
+          "image": "python:3.9"
+        }
+      },
+      "exec-validate-results": {
+        "container": {
+          "args": [
+            "--executor_input",
+            "{{$}}",
+            "--function_to_execute",
+            "validate_results"
+          ],
+          "command": [
+            "sh",
+            "-c",
+            "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'kfp==2.12.1' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&  python3 -m pip install --quiet --no-warn-script-location 'google-cloud-storage' && \"$0\" \"$@\"\n",
+            "sh",
+            "-ec",
+            "program_path=$(mktemp -d)\n\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+            "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef validate_results(output_path: str) -> str:\n    \"\"\"Validate prediction results.\"\"\"\n    from google.cloud import storage\n    import json\n\n    if not output_path.startswith('gs://'):\n        return \"Invalid output path\"\n\n    path_parts = output_path.replace(\"gs://\", \"\").split(\"/\", 1)\n    client = storage.Client()\n    bucket = client.bucket(path_parts[0])\n    blob = bucket.blob(path_parts[1])\n\n    data = blob.download_as_text()\n    predictions = [json.loads(line) for line in data.strip().split('\\n') if line.strip()]\n\n    batch_run_id = predictions[0].get('batch_run_id', 'unknown') if predictions else 'unknown'\n    training_run_id = predictions[0].get('training_run_id', 'unknown') if predictions else 'unknown'\n    scores = [p['wine_quality_score'] for p in predictions]\n\n    print(f\"INFO: Batch run {batch_run_id} - Validated {len(predictions)} predictions\")\n    print(f\"INFO: Used model from training run {training_run_id}\")\n    print(f\"INFO: Score range: {min(scores):.2f} - {max(scores):.2f}\")\n\n    return f\"Batch {batch_run_id}: {len(predictions)} predictions validated\"\n\n"
+          ],
+          "image": "python:3.9"
+        }
+      }
+    }
+  },
+  "pipelineInfo": {
+    "description": "Wine Quality Batch Predictor Pipeline.",
+    "name": "wine-quality-batch-predictor"
+  },
+  "root": {
+    "dag": {
+      "tasks": {
+        "batch-predict": {
+          "cachingOptions": {
+            "enableCache": true
+          },
+          "componentRef": {
+            "name": "comp-batch-predict"
+          },
+          "dependentTasks": [
+            "save-model"
+          ],
+          "inputs": {
+            "parameters": {
+              "gcs_model_path": {
+                "taskOutputParameter": {
+                  "outputParameterKey": "Output",
+                  "producerTask": "save-model"
+                }
+              },
+              "input_path": {
+                "componentInputParameter": "batch_input_path"
+              },
+              "output_path": {
+                "componentInputParameter": "batch_output_path"
+              }
+            }
+          },
+          "taskInfo": {
+            "name": "batch-predict"
+          }
+        },
+        "load-data": {
+          "cachingOptions": {
+            "enableCache": true
+          },
+          "componentRef": {
+            "name": "comp-load-data"
+          },
+          "inputs": {
+            "parameters": {
+              "data_path": {
+                "componentInputParameter": "data_path"
+              }
+            }
+          },
+          "taskInfo": {
+            "name": "load-data"
+          }
+        },
+        "save-model": {
+          "cachingOptions": {
+            "enableCache": true
+          },
+          "componentRef": {
+            "name": "comp-save-model"
+          },
+          "dependentTasks": [
+            "train-model"
+          ],
+          "inputs": {
+            "artifacts": {
+              "model_input": {
+                "taskOutputArtifact": {
+                  "outputArtifactKey": "model_output",
+                  "producerTask": "train-model"
+                }
+              }
+            },
+            "parameters": {
+              "gcs_bucket": {
+                "componentInputParameter": "gcs_bucket"
+              },
+              "model_name": {
+                "componentInputParameter": "model_name"
+              }
+            }
+          },
+          "taskInfo": {
+            "name": "save-model"
+          }
+        },
+        "train-model": {
+          "cachingOptions": {
+            "enableCache": true
+          },
+          "componentRef": {
+            "name": "comp-train-model"
+          },
+          "dependentTasks": [
+            "load-data"
+          ],
+          "inputs": {
+            "artifacts": {
+              "input_data": {
+                "taskOutputArtifact": {
+                  "outputArtifactKey": "output_data",
+                  "producerTask": "load-data"
+                }
+              }
+            },
+            "parameters": {
+              "n_estimators": {
+                "runtimeValue": {
+                  "constant": 50.0
+                }
+              },
+              "random_state": {
+                "runtimeValue": {
+                  "constant": 42.0
+                }
+              }
+            }
+          },
+          "taskInfo": {
+            "name": "train-model"
+          }
+        },
+        "validate-results": {
+          "cachingOptions": {
+            "enableCache": true
+          },
+          "componentRef": {
+            "name": "comp-validate-results"
+          },
+          "dependentTasks": [
+            "batch-predict"
+          ],
+          "inputs": {
+            "parameters": {
+              "output_path": {
+                "taskOutputParameter": {
+                  "outputParameterKey": "Output",
+                  "producerTask": "batch-predict"
+                }
+              }
+            }
+          },
+          "taskInfo": {
+            "name": "validate-results"
+          }
+        }
+      }
+    },
+    "inputDefinitions": {
+      "parameters": {
+        "batch_input_path": {
+          "parameterType": "STRING"
+        },
+        "batch_output_path": {
+          "parameterType": "STRING"
+        },
+        "data_path": {
+          "parameterType": "STRING"
+        },
+        "gcs_bucket": {
+          "defaultValue": "model-build-wine-dev2-ea8f",
+          "isOptional": true,
+          "parameterType": "STRING"
+        },
+        "model_name": {
+          "parameterType": "STRING"
+        }
+      }
+    }
+  },
+  "schemaVersion": "2.1.0",
+  "sdkVersion": "kfp-2.12.1"
+}
