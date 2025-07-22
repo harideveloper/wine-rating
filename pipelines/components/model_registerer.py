@@ -22,39 +22,51 @@ def register_model(
     import logging
 
     try:
-        logging.info("Starting model registration")
-        logging.info("Registering model %s to Vertex AI", model_display_name)
+        logging.info("Starting model registration for %s", model_display_name)
 
-        # Initialize Vertex AI
         aiplatform.init(project=project, location=region)
 
-        # Upload model to registry
-        logging.info("Uploading model to Vertex AI Model Registry")
-        model = aiplatform.Model.upload(
-            display_name=model_display_name,
-            artifact_uri=model_artifact.uri,
-            serving_container_image_uri=model_serving_image,
-            serving_container_predict_route="/predict",
-            serving_container_health_route="/health",
+        # Find existing model for proper versioning
+        existing_models = aiplatform.Model.list(
+            filter=f'display_name="{model_display_name}"',
+            page_size=1
         )
 
-        logging.info("Model registered successfully")
+        # Upload model (creates new version if parent exists)
+        if existing_models:
+            logging.info("Creating new version for existing model")
+            model = aiplatform.Model.upload(
+                display_name=model_display_name,
+                artifact_uri=model_artifact.uri,
+                serving_container_image_uri=model_serving_image,
+                serving_container_predict_route="/predict",
+                serving_container_health_route="/health",
+                parent_model=existing_models[0].resource_name,
+                is_default_version=True,
+            )
+        else:
+            logging.info("Creating new model")
+            model = aiplatform.Model.upload(
+                display_name=model_display_name,
+                artifact_uri=model_artifact.uri,
+                serving_container_image_uri=model_serving_image,
+                serving_container_predict_route="/predict",
+                serving_container_health_route="/health",
+                is_default_version=True,
+            )
 
-        # Set registered model metadata
+        # Set output metadata
         registered_model.uri = model.resource_name
         registered_model.metadata["display_name"] = model_display_name
         registered_model.metadata["resource_name"] = model.resource_name
 
-        # Copy original metadata
-        metadata_count = 0
+        # Copy model artifact metadata
         for key, value in model_artifact.metadata.items():
             if key not in registered_model.metadata:
                 registered_model.metadata[key] = value
-                metadata_count += 1
 
-        logging.info("Copied %s metadata items", metadata_count)
         logging.info("Model registration completed successfully")
 
     except Exception as e:
-        logging.error("Data loading failed: %s", e)
+        logging.error("Model registration failed: %s", e)
         raise
