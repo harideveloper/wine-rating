@@ -1,6 +1,7 @@
 """Wine quality online prediction pipeline definition."""
 
 from kfp.v2 import dsl, compiler
+import logging
 from components import (
     load_data,
     preprocess_data,
@@ -9,6 +10,7 @@ from components import (
     save_model,
     register_model,
     deploy_model,
+    validate_model
 )
 
 from constants import (
@@ -87,16 +89,58 @@ def wine_quality_online_predictor_pipeline(
             min_replica_count=min_replica_count,
             max_replica_count=max_replica_count,
         )
+        validate_task = validate_model(
+            endpoint=deploy_task.outputs["endpoint"],
+            project=project,
+            region=region,
+        )
         deploy_task.after(register_task)
+        validate_task.after(deploy_task)
 
-
-def compile_pipeline(output_file: str) -> None:
+def compile_pipeline(pipeline_file_name: str, pipeline_storage_bucket: str, project: str) -> str:
     """
-    Compile the wine quality prediction pipeline.
-
+    Compile the wine quality prediction pipeline and upload to Cloud Storage.
+    
     Args:
-        output_file: Path to save the compiled pipeline
+        pipeline_file_name: Name of the pipeline file (e.g., "training.json" or "pipeline-build-123.json")
+        pipeline_storage_bucket: GCS bucket name to store the pipeline (without gs:// prefix)
+        project: Google Cloud project ID
+        
+    Returns:
+        str: GCS URI of the compiled pipeline JSON (gs://bucket/pipeline_file_name)
+        
+    Raises:
+        Exception: If compilation or upload fails
     """
-    compiler.Compiler().compile(
-        pipeline_func=wine_quality_online_predictor_pipeline, package_path=output_file
-    )
+    import os
+    from google.cloud import storage
+    
+    # Construct GCS URI
+    pipeline_file_gcs_uri = f"gs://{pipeline_storage_bucket}/{pipeline_file_name}"
+    
+    try:
+        logging.info("Starting pipeline compilation for project %s", project)
+        
+        # Compile pipeline to local file
+        compiler.Compiler().compile(
+            pipeline_func=wine_quality_online_predictor_pipeline,
+            package_path=pipeline_file_name
+        )
+        
+        # Upload to GCS
+        storage_client = storage.Client(project=project)
+        bucket = storage_client.bucket(pipeline_storage_bucket)
+        blob = bucket.blob(pipeline_file_name)
+        blob.upload_from_filename(pipeline_file_name)
+        
+        logging.info("Pipeline compilation completed successfully to %s", pipeline_file_gcs_uri)
+        return pipeline_file_gcs_uri
+        
+    except Exception as e:
+        logging.error("Pipeline compilation failed for project %s: %s", project, str(e))
+        raise e
+        
+    finally:
+        # Clean up local file
+        if os.path.exists(pipeline_file_name):
+            os.unlink(pipeline_file_name)

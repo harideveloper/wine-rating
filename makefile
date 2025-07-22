@@ -30,9 +30,13 @@ install:
 eda: 
 	cd notebooks && jupyter notebook wine_eda_01.ipynb
 
-.PHONY: test
-test:
-	$(PYTHON_VENV) -m pytest --pyargs $(PIPELINE_DIR) -v
+.PHONY: test-components
+test-components:
+	$(PYTHON_VENV) -m pytest --pyargs $(PIPELINE_DIR)/components -v
+
+.PHONY: e2e-test
+e2e-test:
+	$(PYTHON_VENV) -m pytest --pyargs $(PIPELINE_DIR)/training -v
 
 .PHONY: test-coverage
 test-coverage:

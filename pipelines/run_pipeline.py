@@ -24,6 +24,7 @@ from constants import (
     MIN_REPLICA_COUNT,
     MAX_REPLICA_COUNT,
     MODEL_SERVING_IMAGE,
+    MODEL_BUCKET,
 )
 
 
@@ -81,13 +82,18 @@ def run_wine_quality_online_predictor(config: PipelineConfig):
 
         # Compile pipeline
         logging.info("Compiling pipeline")
-        compile_pipeline(config.pipeline_file)
+        # compile_pipeline(config.pipeline_file)
+        pipeline_file_gcs_uri = compile_pipeline(
+            pipeline_file_name=PIPELINE_FILE,
+            pipeline_storage_bucket=MODEL_BUCKET,
+            project=config.project_id
+        )
 
         # Create pipeline job
         logging.info("Creating pipeline job")
         job = aiplatform.PipelineJob(
             display_name=PIPELINE_JOB_DISPLAY_NAME,
-            template_path=PIPELINE_FILE,
+            template_path=pipeline_file_gcs_uri,
             pipeline_root=config.pipeline_root,
             parameter_values={
                 "data_path": config.data_path,

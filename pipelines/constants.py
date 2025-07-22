@@ -1,6 +1,7 @@
 """
 Constants for the Wine Quality Predictor Pipeline.
 """
+import os 
 
 # General
 PROJECT_ID = "dev2-ea8f"
@@ -14,7 +15,8 @@ DATA_PATH = f"gs://{MODEL_BUCKET}/dataset/wine_data.csv"
 
 
 # Pipeline Configuration
-PIPELINE_FILE = f"{APPLICATION}-{TYPE}.json"
+BUILD_NUMBER = os.getenv("BUILD_NUMBER","local")
+PIPELINE_FILE = f"{APPLICATION}-{TYPE}-{BUILD_NUMBER}.json"
 PIPELINE_JOB_DISPLAY_NAME = f"{APPLICATION}-{TYPE}-pipeline"
 PIPELINE_JOB_DISPLAY_DESC = "E2E Wine Rating Demo Pipeline"
 PIPELINE_ROOT_SUFFIX = f"pipeline/{APPLICATION}-{TYPE}"

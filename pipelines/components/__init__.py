@@ -7,6 +7,7 @@ from .model_evaluator import evaluate_model
 from .model_uploader import save_model
 from .model_registerer import register_model
 from .model_deployer import deploy_model
+from .model_validator import validate_model
 
 __all__ = [
     "load_data",
@@ -16,4 +17,5 @@ __all__ = [
     "save_model",
     "register_model",
     "deploy_model",
+    "validate_model",
 ]
