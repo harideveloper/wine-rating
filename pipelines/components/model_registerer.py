@@ -4,7 +4,7 @@ from kfp.v2.dsl import Model, Input, Output, component
 from constants import BASE_CONTAINER_IMAGE
 
 
-# pylint: disable=too-many-arguments, too-many-positional-arguments
+# pylint: disable=too-many-arguments
 @component(
     packages_to_install=["google-cloud-aiplatform"], base_image=BASE_CONTAINER_IMAGE
 )
@@ -23,13 +23,11 @@ def register_model(
 
     try:
         logging.info("Starting model registration for %s", model_display_name)
-
         aiplatform.init(project=project, location=region)
 
-        # Find existing model for proper versioning
+        # list existing model
         existing_models = aiplatform.Model.list(
-            filter=f'display_name="{model_display_name}"',
-            page_size=1
+            filter=f'display_name="{model_display_name}"'
         )
 
         # Upload model (creates new version if parent exists)
@@ -54,19 +52,13 @@ def register_model(
                 serving_container_health_route="/health",
                 is_default_version=True,
             )
-
-        # Set output metadata
         registered_model.uri = model.resource_name
         registered_model.metadata["display_name"] = model_display_name
         registered_model.metadata["resource_name"] = model.resource_name
-
-        # Copy model artifact metadata
         for key, value in model_artifact.metadata.items():
             if key not in registered_model.metadata:
                 registered_model.metadata[key] = value
-
         logging.info("Model registration completed successfully")
-
     except Exception as e:
         logging.error("Model registration failed: %s", e)
         raise

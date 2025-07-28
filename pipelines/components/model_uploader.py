@@ -15,28 +15,18 @@ def save_model(model_artifact: Input[Model], uploaded_model_artifact: Output[Mod
 
     try:
         logging.info("Starting model save process")
-
-        # Define paths
         source_path = model_artifact.path + ".joblib"
         model_dir = os.path.dirname(uploaded_model_artifact.path)
         model_file_path = os.path.join(model_dir, "model.joblib")
-
         logging.info("Preparing model directory")
         os.makedirs(model_dir, exist_ok=True)
-
-        # Copy model file
         logging.info("Copying model file")
         with open(source_path, "rb") as source_file:
             model_data = source_file.read()
         with open(model_file_path, "wb") as target_file:
             target_file.write(model_data)
-
         logging.info("Model file copied successfully")
-
-        # Set model URI
         uploaded_model_artifact.uri = model_dir
-
-        # Copy metadata
         metadata_count = 0
         for key, value in model_artifact.metadata.items():
             try:
@@ -46,10 +36,8 @@ def save_model(model_artifact: Input[Model], uploaded_model_artifact: Output[Mod
                 logging.warning(
                     "Failed to copy metadata for key '%s': %s", key, metadata_error
                 )
-
         logging.info("Copied %s metadata items", metadata_count)
         logging.info("Model save completed successfully")
-
     except Exception as e:
         logging.error("Model save failed: %s", e)
         raise

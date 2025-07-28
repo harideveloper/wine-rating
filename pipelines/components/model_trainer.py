@@ -42,7 +42,6 @@ def train_model(
         numeric_features = [col for col in numeric_features if col in df.columns]
         feature_order = numeric_features + categorical_features
         target = "Rating"
-
         logging.info(
             "Features - Numeric: %s, Categorical: %s",
             len(numeric_features),
@@ -73,7 +72,6 @@ def train_model(
             ],
             remainder="passthrough",
         )
-
         # model pipeline
         model_pipeline = Pipeline(
             steps=[
@@ -106,7 +104,6 @@ def train_model(
         output_model.metadata["feature_order"] = str(feature_order)
         output_model.metadata["target"] = target
         logging.info("Model saved successfully")
-
     except Exception as e:
         logging.error("Model training failed: %s", e)
         raise

@@ -23,6 +23,7 @@ def evaluate_model(model_artifact: Input[Model], test_data: Input[Dataset]) -> f
         # Load model
         model_path = model_artifact.path + ".joblib"
         logging.info("Loading trained model")
+
         try:
             with open(model_path, "rb") as file:
                 model = joblib.load(file)
@@ -53,7 +54,6 @@ def evaluate_model(model_artifact: Input[Model], test_data: Input[Dataset]) -> f
                 col for col in numeric_features if col in test_df.columns
             ]
             features = numeric_features + categorical_features
-
         target = model_artifact.metadata.get("target", "Rating")
         logging.info("Using %s features for evaluation", len(features))
 
@@ -67,7 +67,6 @@ def evaluate_model(model_artifact: Input[Model], test_data: Input[Dataset]) -> f
         rmse = np.sqrt(mse)
         mae = mean_absolute_error(test_target, predictions)
         r2 = r2_score(test_target, predictions)
-
         logging.info(
             "Evaluation Results - RMSE: %.4f, MAE: %.4f, R²: %.4f", rmse, mae, r2
         )
@@ -76,12 +75,9 @@ def evaluate_model(model_artifact: Input[Model], test_data: Input[Dataset]) -> f
         r2_norm = max(0, r2)
         rmse_score = max(0, 1.0 - rmse)
         quality_score = (0.7 * r2_norm) + (0.3 * rmse_score)
-
         logging.info("Model quality score: %.4f", quality_score)
         logging.info("Model evaluation completed successfully")
-
         return quality_score
-
     except Exception as e:
         logging.error("Model evaluation failed: %s", e)
         raise

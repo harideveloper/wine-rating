@@ -1,7 +1,6 @@
 """Tests for trainer component core logic."""
 
 from unittest.mock import MagicMock, mock_open, patch
-
 import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.pipeline import Pipeline
@@ -20,13 +19,11 @@ class TestModelTrainer:
                 "Rating": [4.2, 3.8],
             }
         )
-
-        # Select features
+        # features selection
         categorical = ["Country", "Region", "Type"]
         available_categorical = [col for col in categorical if col in df.columns]
         numeric = ["price_numeric"]
         features = numeric + available_categorical
-
         assert features == ["price_numeric", "Country"]
 
     def test_pipeline_creation(self):
@@ -37,7 +34,6 @@ class TestModelTrainer:
                 ("model", RandomForestRegressor(n_estimators=10, random_state=42)),
             ]
         )
-
         assert len(pipeline.steps) == 2
         assert isinstance(pipeline.steps[1][1], RandomForestRegressor)
 
@@ -50,11 +46,9 @@ class TestModelTrainer:
                 "Rating": [4.2, 3.8],
             }
         )
-
         features = ["price_numeric", "Country"]
         features_data = df[features].values
         target_data = df["Rating"].values
-
         assert features_data.shape == (2, 2)
         assert target_data.shape == (2,)
 
@@ -65,10 +59,8 @@ class TestModelTrainer:
     ):  # pylint: disable=unused-argument
         """Test model saving logic."""
         mock_pipeline = MagicMock()
-
         import joblib  # pylint: disable=import-outside-toplevel
 
         with open("model.joblib", "wb") as f:
             joblib.dump(mock_pipeline, f)
-
         mock_dump.assert_called_once()

@@ -12,8 +12,7 @@ class TestModelDeployer:
         from google.cloud import aiplatform  # pylint: disable=import-outside-toplevel
 
         project = "test-project"
-        region = "us-central1"
-
+        region = "europe-west1"
         aiplatform.init(project=project, location=region)
         mock_init.assert_called_once_with(project=project, location=region)
 
@@ -22,12 +21,10 @@ class TestModelDeployer:
         """Test loading model for deployment."""
         mock_model = MagicMock()
         mock_model_class.return_value = mock_model
-
         from google.cloud import aiplatform  # pylint: disable=import-outside-toplevel
 
-        model_resource_name = "projects/test/locations/us-central1/models/123"
+        model_resource_name = "projects/test/locations/europe-west1/models/123"
         model = aiplatform.Model(model_resource_name)
-
         assert model == mock_model
 
     @patch("google.cloud.aiplatform.Endpoint.create")
@@ -35,16 +32,16 @@ class TestModelDeployer:
         """Test endpoint creation logic."""
         mock_endpoint = MagicMock()
         mock_endpoint.resource_name = (
-            "projects/test/locations/us-central1/endpoints/456"
+            "projects/test/locations/europe-west1/endpoints/456"
         )
         mock_create.return_value = mock_endpoint
-
         from google.cloud import aiplatform  # pylint: disable=import-outside-toplevel
 
         endpoint = aiplatform.Endpoint.create(
-            display_name="wine-endpoint", project="test-project", location="us-central1"
+            display_name="wine-endpoint",
+            project="test-project",
+            location="europe-west1",
         )
-
         assert endpoint.resource_name.endswith("endpoints/456")
 
     def test_deployment_configuration(self):
@@ -55,7 +52,6 @@ class TestModelDeployer:
             "max_replica_count": 3,
             "traffic_percentage": 100,
         }
-
         assert config["min_replica_count"] >= 1
         assert config["max_replica_count"] >= config["min_replica_count"]
         assert 0 <= config["traffic_percentage"] <= 100
@@ -68,7 +64,6 @@ class TestModelDeployer:
         mock_model = MagicMock()
         mock_endpoint_class.return_value = mock_endpoint
         mock_endpoint.deploy.return_value = mock_model
-
         from google.cloud import aiplatform  # pylint: disable=import-outside-toplevel
 
         endpoint = aiplatform.Endpoint("endpoint-resource-name")

@@ -1,10 +1,11 @@
 """Data preprocessor component for wine quality pipeline."""
 
+# pylint: disable=line-too-long
 from kfp.v2.dsl import component, Input, Output, Dataset
 from constants import BASE_CONTAINER_IMAGE
 
 
-# pylint: disable=too-many-arguments, too-many-positional-arguments, too-many-locals
+# pylint: disable=too-many-arguments, too-many-arguments, too-many-locals
 @component(
     packages_to_install=["pandas", "numpy", "scikit-learn"],
     base_image=BASE_CONTAINER_IMAGE,
@@ -26,8 +27,6 @@ def preprocess_data(
 
     try:
         logging.info("Starting data preprocessing")
-
-        # Load data
         df = pd.read_csv(input_data.path)
         logging.info("Loaded data: %d rows, %d columns", df.shape[0], df.shape[1])
 
@@ -71,9 +70,7 @@ def preprocess_data(
         train_df.to_csv(train_data.path, index=False)
         test_df.to_csv(test_data.path, index=False)
         df.to_csv(output_data.path, index=False)
-
         logging.info("Data preprocessing completed successfully")
-
     except Exception as e:
         logging.error("Data loading failed: %s", e)
         raise

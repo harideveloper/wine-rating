@@ -4,11 +4,11 @@ import logging
 import sys
 from dataclasses import dataclass
 from typing import Optional
-
 from google.cloud import aiplatform
-
+from google.oauth2.credentials import Credentials
 from training import compile_pipeline
 from constants import (
+    AUTH_TOKEN,
     PROJECT_ID,
     DATA_PATH,
     REGION,
@@ -24,7 +24,10 @@ from constants import (
     MIN_REPLICA_COUNT,
     MAX_REPLICA_COUNT,
     MODEL_SERVING_IMAGE,
-    MODEL_BUCKET,
+    DATA_BUCKET,
+    PIPELINE_SA,
+    BUILD_NUMBER,
+    PIPELINE_BUCKET,
 )
 
 
@@ -34,7 +37,10 @@ class PipelineConfig:
 
     # pylint: disable=too-many-instance-attributes
     project_id: str = PROJECT_ID
+    data_bucket: str = DATA_BUCKET
     data_path: str = DATA_PATH
+    pipeline_bucket: str = PIPELINE_BUCKET
+    pipeline_sa: str = PIPELINE_SA
     model_display_name: str = MODEL_DISPLAY_NAME
     endpoint_display_name: str = MODEL_ENDPOINT_DISPLAY_NAME
     region: str = REGION
@@ -48,47 +54,73 @@ class PipelineConfig:
     min_replica_count: int = MIN_REPLICA_COUNT
     max_replica_count: int = MAX_REPLICA_COUNT
     model_serving_image: str = MODEL_SERVING_IMAGE
+    auth_token: str = AUTH_TOKEN
+    build_number: str = BUILD_NUMBER
     enable_caching: bool = True
     sync: bool = True
 
 
-def validate_inputs(project_id: str, data_path: str) -> None:
+def validate_inputs(config: PipelineConfig) -> None:
     """Validate input parameters."""
-    if not project_id:
-        raise ValueError("Project ID cannot be empty")
-    if not data_path.startswith("gs://"):
-        raise ValueError("Data path must be a GCS URL (gs://...)")
+    print("mandatory config")
+    mandatory_configs = [
+        "project_id",
+        "data_bucket",
+        "data_path",
+        "pipeline_bucket",
+        "pipeline_sa",
+        "model_display_name",
+        "endpoint_display_name",
+        "region",
+        "pipeline_file",
+        "evaluation_threshold",
+        "test_size",
+        "n_estimators",
+        "machine_type",
+        "min_replica_count",
+        "min_replica_count",
+        "model_serving_image",
+    ]
+    for mandatory_config in mandatory_configs:
+        value = getattr(config, mandatory_config)
+        if not value or (isinstance(value, str) and value.strip() == ""):
+            raise ValueError(f"Missing Config Parameter for: {mandatory_config}")
 
 
 def run_wine_quality_online_predictor(config: PipelineConfig):
     """
     Run the wine quality prediction pipeline on Vertex AI.
-
     Args:
         config: Pipeline configuration object
-
     Returns:
         aiplatform.PipelineJob: The pipeline job object
     """
     try:
         logging.info("Starting Wine Quality Online Predictor Pipeline")
-
         # Validate inputs
-        validate_inputs(config.project_id, config.data_path)
-
+        validate_inputs(config)
         # Initialize Vertex AI
         logging.info("Initializing Vertex AI")
-        aiplatform.init(project=config.project_id, location=config.region)
-
+        if not AUTH_TOKEN:
+            raise ValueError(
+                "CLOUDSDK_AUTH_ACCESS_TOKEN environment variable is not set"
+            )
+        credentials = Credentials(AUTH_TOKEN)
+        aiplatform.init(
+            project=config.project_id,
+            location=config.region,
+            credentials=credentials,
+            service_account=PIPELINE_SA,
+        )  # pylint: disable=line-too-long
         # Compile pipeline
         logging.info("Compiling pipeline")
-        # compile_pipeline(config.pipeline_file)
         pipeline_file_gcs_uri = compile_pipeline(
+            pipeline_name=PIPELINE_JOB_DISPLAY_NAME,
             pipeline_file_name=PIPELINE_FILE,
-            pipeline_storage_bucket=MODEL_BUCKET,
-            project=config.project_id
+            pipeline_storage_bucket=DATA_BUCKET,
+            project=config.project_id,
+            credentials=credentials,  # pylint: disable=line-too-long
         )
-
         # Create pipeline job
         logging.info("Creating pipeline job")
         job = aiplatform.PipelineJob(
@@ -112,11 +144,9 @@ def run_wine_quality_online_predictor(config: PipelineConfig):
             },
             enable_caching=config.enable_caching,
         )
-
         # Run pipeline job
         logging.info("Starting pipeline execution")
         job.run(sync=config.sync)
-
         if config.sync:
             if job.state == "PIPELINE_STATE_SUCCEEDED":
                 logging.info("Pipeline completed successfully")
@@ -124,9 +154,7 @@ def run_wine_quality_online_predictor(config: PipelineConfig):
                 logging.error("Pipeline failed with state: %s", job.state)
         else:
             logging.info("Pipeline started asynchronously")
-
         return job
-
     except ValueError as ve:
         logging.error("Input validation failed: %s", ve)
         raise

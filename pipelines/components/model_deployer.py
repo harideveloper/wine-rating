@@ -4,7 +4,7 @@ from kfp.v2.dsl import Model, Input, Output, component
 from constants import BASE_CONTAINER_IMAGE
 
 
-# pylint: disable=too-many-arguments, too-many-positional-arguments
+# pylint: disable=too-many-arguments, too-many-locals
 @component(
     packages_to_install=["google-cloud-aiplatform"], base_image=BASE_CONTAINER_IMAGE
 )
@@ -21,21 +21,20 @@ def deploy_model(
     """Deploys a model to Vertex AI Endpoint."""
     # pylint: disable=import-outside-toplevel
     from google.cloud import aiplatform
+    import logging
 
     aiplatform.init(project=project, location=region)
     model_name = model_registry_name.metadata.get("resource_name")
     if not model_name:
-        print("ERROR: Model resource_name not found in metadata")
+        logging.info("Model resource_name not found in metadata: %s", model_name)
         raise ValueError("ERROR: Model resource_name is missing from metadata.")
     try:
         model = aiplatform.Model(model_name)
-        print(f"DEBUG: Retrieved model: {model.resource_name}")
+        logging.info("Retrieved model : %s", model.resource_name)
     except Exception as e:
         print(f"ERROR: retrieving model: {e}")
         raise e
-    deployed_model_display_name = (
-        f"{model_registry_name.metadata.get('display_name', 'model')}-deployed"
-    )
+    deployed_model_display_name = f"{model_registry_name.metadata.get('display_name', 'model')}-deployed"  # pylint: disable=line-too-long
     try:
         endpoints = aiplatform.Endpoint.list(
             filter=f'display_name="{endpoint_display_name}"',
@@ -45,15 +44,12 @@ def deploy_model(
         )
         if endpoints:
             endpoint_to_use = endpoints[0]
-            print(
-                f"DEBUG: Using existing model endpoint: {endpoint_to_use.resource_name}"
-            )
+            logging.info("Using existing endpoint: %s", endpoint_to_use.resource_name)
         else:
             endpoint_to_use = aiplatform.Endpoint.create(
                 display_name=endpoint_display_name, project=project, location=region
-            )
-            print(f"INFO: Created new endpoint: {endpoint_to_use.resource_name}")
-        print("DEBUG: Starting deployment of model to endpoint...")
+            )  # pylint: disable=line-too-long
+            logging.info("Using new endpoint: %s", endpoint_to_use.resource_name)
         endpoint_to_use.deploy(
             model=model,
             deployed_model_display_name=deployed_model_display_name,
@@ -62,10 +58,10 @@ def deploy_model(
             max_replica_count=max_replica_count,
             traffic_split={"0": 100},
         )
-        print(f"INFO: Model deployed to endpoint: {endpoint_to_use.resource_name}")
+        logging.info("Model deployed to endpoint: %s", endpoint_to_use.resource_name)
         endpoint.uri = endpoint_to_use.resource_name
     except Exception as e:
-        print(f"ERROR: Model deployment error: {e}")
+        logging.error("Model deployment model : %s", e)
         if "endpoint_to_use" in locals():
             endpoint.uri = endpoint_to_use.resource_name
         raise e
