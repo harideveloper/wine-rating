@@ -106,12 +106,20 @@ def run_wine_quality_online_predictor(config: PipelineConfig):
                 "CLOUDSDK_AUTH_ACCESS_TOKEN environment variable is not set"
             )
         credentials = Credentials(AUTH_TOKEN)
+        # aiplatform.init(
+        #     project=config.project_id,
+        #     location=config.region,
+        #     credentials=credentials,
+        #     service_account=PIPELINE_SA,
+        # )  # pylint: disable=line-too-long
+
         aiplatform.init(
             project=config.project_id,
             location=config.region,
-            credentials=credentials,
-            service_account=PIPELINE_SA,
+            # credentials=credentials,
+            # service_account=PIPELINE_SA,
         )  # pylint: disable=line-too-long
+
         # Compile pipeline
         logging.info("Compiling pipeline")
         pipeline_file_gcs_uri = compile_pipeline(

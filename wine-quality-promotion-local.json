@@ -1,0 +1,185 @@
+{
+  "components": {
+    "comp-get-latest-promotable-model": {
+      "executorLabel": "exec-get-latest-promotable-model",
+      "inputDefinitions": {
+        "parameters": {
+          "location": {
+            "parameterType": "STRING"
+          },
+          "model_display_name": {
+            "parameterType": "STRING"
+          },
+          "project": {
+            "parameterType": "STRING"
+          }
+        }
+      },
+      "outputDefinitions": {
+        "parameters": {
+          "Output": {
+            "parameterType": "STRING"
+          }
+        }
+      }
+    },
+    "comp-promote-model-simple": {
+      "executorLabel": "exec-promote-model-simple",
+      "inputDefinitions": {
+        "parameters": {
+          "location": {
+            "parameterType": "STRING"
+          },
+          "model_resource_name": {
+            "parameterType": "STRING"
+          },
+          "source_project": {
+            "parameterType": "STRING"
+          },
+          "target_project": {
+            "parameterType": "STRING"
+          }
+        }
+      },
+      "outputDefinitions": {
+        "artifacts": {
+          "promoted_model": {
+            "artifactType": {
+              "schemaTitle": "system.Model",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        }
+      }
+    }
+  },
+  "deploymentSpec": {
+    "executors": {
+      "exec-get-latest-promotable-model": {
+        "container": {
+          "args": [
+            "--executor_input",
+            "{{$}}",
+            "--function_to_execute",
+            "get_latest_promotable_model"
+          ],
+          "command": [
+            "sh",
+            "-c",
+            "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'kfp==2.12.1' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&  python3 -m pip install --quiet --no-warn-script-location 'google-cloud-aiplatform' && \"$0\" \"$@\"\n",
+            "sh",
+            "-ec",
+            "program_path=$(mktemp -d)\n\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+            "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef get_latest_promotable_model(\n    model_display_name: str,\n    project: str,\n    location: str,\n) -> str:\n    \"\"\"Fetch latest model with given name that has label `ready-for-promotion: true`.\"\"\"\n    from google.cloud import aiplatform\n\n    aiplatform.init(project=project, location=location)\n    models = aiplatform.Model.list(filter=f'display_name=\"{model_display_name}\"')\n\n    if not models:\n        raise ValueError(f\"No models found with display name: {model_display_name}\")\n\n    # Sort by creation time (latest first)\n    sorted_models = sorted(models, key=lambda m: m.create_time, reverse=True)\n\n    for model in sorted_models:\n        labels = model.labels or {}\n        if labels.get(\"ready-for-promotion\", \"\").lower() == \"true\":\n            return model.resource_name\n\n    raise ValueError(f\"No models with required labels: ready-for-promotion=true\")\n\n"
+          ],
+          "image": "python:3.9"
+        }
+      },
+      "exec-promote-model-simple": {
+        "container": {
+          "args": [
+            "--executor_input",
+            "{{$}}",
+            "--function_to_execute",
+            "promote_model_simple"
+          ],
+          "command": [
+            "sh",
+            "-c",
+            "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'kfp==2.12.1' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&  python3 -m pip install --quiet --no-warn-script-location 'google-cloud-aiplatform' && \"$0\" \"$@\"\n",
+            "sh",
+            "-ec",
+            "program_path=$(mktemp -d)\n\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+            "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef promote_model_simple(\n    model_resource_name: str,\n    source_project: str,\n    target_project: str,\n    location: str,\n    promoted_model: Output[Model]\n):\n    \"\"\"Copy model to target project with production tag.\"\"\"\n    from google.cloud import aiplatform\n    import datetime\n\n    aiplatform.init(project=source_project, location=location)\n    source_model = aiplatform.Model(model_resource_name)\n\n    aiplatform.init(project=target_project, location=location)\n    prod_labels = (source_model.labels or {}).copy()\n    prod_labels.update({\n        \"environment\": \"production\",\n        \"promoted-from\": source_project,\n        \"promotion-date\": datetime.datetime.utcnow().date().isoformat()\n    })\n\n    target_display_name = f\"{source_model.display_name}_prod\"\n\n    new_model = aiplatform.Model.upload(\n        display_name=target_display_name,\n        artifact_uri=source_model.uri,\n        serving_container_image_uri=source_model.container_spec.image_uri,\n        labels=prod_labels,\n        description=f\"Promoted from {source_project}\",\n        sync=True\n    )\n\n    promoted_model.uri = new_model.resource_name\n    promoted_model.metadata[\"display_name\"] = new_model.display_name\n\n"
+          ],
+          "image": "python:3.9"
+        }
+      }
+    }
+  },
+  "pipelineInfo": {
+    "description": "Promote model with minimal validation",
+    "name": "simplified-model-promotion"
+  },
+  "root": {
+    "dag": {
+      "tasks": {
+        "get-latest-promotable-model": {
+          "cachingOptions": {
+            "enableCache": true
+          },
+          "componentRef": {
+            "name": "comp-get-latest-promotable-model"
+          },
+          "inputs": {
+            "parameters": {
+              "location": {
+                "componentInputParameter": "location"
+              },
+              "model_display_name": {
+                "componentInputParameter": "model_display_name"
+              },
+              "project": {
+                "componentInputParameter": "source_project"
+              }
+            }
+          },
+          "taskInfo": {
+            "name": "get-latest-promotable-model"
+          }
+        },
+        "promote-model-simple": {
+          "cachingOptions": {
+            "enableCache": true
+          },
+          "componentRef": {
+            "name": "comp-promote-model-simple"
+          },
+          "dependentTasks": [
+            "get-latest-promotable-model"
+          ],
+          "inputs": {
+            "parameters": {
+              "location": {
+                "componentInputParameter": "location"
+              },
+              "model_resource_name": {
+                "taskOutputParameter": {
+                  "outputParameterKey": "Output",
+                  "producerTask": "get-latest-promotable-model"
+                }
+              },
+              "source_project": {
+                "componentInputParameter": "source_project"
+              },
+              "target_project": {
+                "componentInputParameter": "target_project"
+              }
+            }
+          },
+          "taskInfo": {
+            "name": "promote-model-simple"
+          }
+        }
+      }
+    },
+    "inputDefinitions": {
+      "parameters": {
+        "location": {
+          "parameterType": "STRING"
+        },
+        "model_display_name": {
+          "parameterType": "STRING"
+        },
+        "source_project": {
+          "parameterType": "STRING"
+        },
+        "target_project": {
+          "parameterType": "STRING"
+        }
+      }
+    }
+  },
+  "schemaVersion": "2.1.0",
+  "sdkVersion": "kfp-2.12.1"
+}

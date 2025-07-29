@@ -46,6 +46,10 @@ test-coverage:
 run:
 	$(PYTHON_VENV) pipelines/run_pipeline.py
 
+.PHONY: promote
+promote:
+	$(PYTHON_VENV) pipelines/run_promotion.py
+
 .PHONY: test-predict
 test-predict: 
 	sh test/test_prediction.sh

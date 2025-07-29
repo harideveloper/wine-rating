@@ -68,31 +68,35 @@ def wine_quality_online_predictor_pipeline(
         test_data=preprocess_task.outputs["test_data"],
     )
     with dsl.Condition(
-        evaluate_task.output >= evaluation_threshold, name="model deployment"
+        # evaluate_task.output >= evaluation_threshold, 
+        evaluate_task.outputs["Output"] >= evaluation_threshold,
+        name="model deployment"
     ):
-        save_task = save_model(model_artifact=train_task.outputs["output_model"])
+        # save_task = save_model(model_artifact=train_task.outputs["output_model"])
+        save_task = save_model(model_artifact=evaluate_task.outputs["evaluated_model"])
         register_task = register_model(
             model_artifact=save_task.outputs["uploaded_model_artifact"],
+            # model_artifact=evaluate_task.outputs["evaluated_model"],
             model_display_name=model_display_name,
             project=project,
             region=region,
             model_serving_image=model_serving_image,
         )
-        deploy_task = deploy_model(
-            model_registry_name=register_task.outputs["registered_model"],
-            endpoint_display_name=endpoint_display_name,
-            project=project,
-            region=region,
-            machine_type=machine_type,
-            min_replica_count=min_replica_count,
-            max_replica_count=max_replica_count,
-        )
-        validate_task = validate_model(
-            endpoint=deploy_task.outputs["endpoint"],
-            project=project,
-            region=region,
-        )
-        validate_task.after(deploy_task)
+        # deploy_task = deploy_model(
+        #     model_registry_name=register_task.outputs["registered_model"],
+        #     endpoint_display_name=endpoint_display_name,
+        #     project=project,
+        #     region=region,
+        #     machine_type=machine_type,
+        #     min_replica_count=min_replica_count,
+        #     max_replica_count=max_replica_count,
+        # )
+        # validate_task = validate_model(
+        #     endpoint=deploy_task.outputs["endpoint"],
+        #     project=project,
+        #     region=region,
+        # )
+        # validate_task.after(deploy_task)
 
 
 def compile_pipeline(
@@ -126,7 +130,8 @@ def compile_pipeline(
             pipeline_func=wine_quality_online_predictor_pipeline,
             package_path=pipeline_file_name,
         )  # pylint: disable=line-too-long
-        storage_client = storage.Client(project=project, credentials=credentials)
+        # storage_client = storage.Client(project=project, credentials=credentials)
+        storage_client = storage.Client(project=project)
         bucket = storage_client.bucket(pipeline_storage_bucket)
         blob = bucket.blob(pipeline_gcs_path)
         blob.upload_from_filename(pipeline_file_name)
