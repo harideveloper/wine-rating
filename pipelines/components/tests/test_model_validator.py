@@ -1,128 +1,168 @@
-"""Tests for model validator component core logic."""
+"""Tests for model endpoint validator component."""
 
 from unittest.mock import MagicMock, patch
+import pytest
+from kfp.v2.dsl import Model
+
+# Import the component and extract the python function
+from pipelines.components.model_endpoint_validator import validate_model_endpoint
+
+validate_model_endpoint_func = validate_model_endpoint.python_func
 
 
-class TestModelValidator:
-    """Test core model validator logic."""
+@patch("google.cloud.aiplatform.init")
+@patch("google.cloud.aiplatform.Endpoint")
+def test_validate_model_endpoint_success(mock_endpoint_class, mock_init):
+    """Test successful model endpoint validation."""
+    mock_endpoint = MagicMock()
+    mock_endpoint.resource_name = (
+        "projects/test-project/locations/europe-west2/endpoints/123"
+    )
+    mock_endpoint_class.return_value = mock_endpoint
+    mock_response = MagicMock()
+    mock_response.predictions = [4.2]
+    mock_endpoint.predict.return_value = mock_response
+    mock_input_endpoint = MagicMock(spec=Model)
+    mock_input_endpoint.uri = (
+        "projects/test-project/locations/europe-west2/endpoints/123"
+    )
+    mock_validation_output = MagicMock(spec=Model)
+    mock_validation_output.metadata = {}
+    validate_model_endpoint_func(
+        endpoint=mock_input_endpoint,
+        validation_output=mock_validation_output,
+        project="test-project",
+        region="europe-west2",
+        test_instances=[
+            [25.99, "France", "Bordeaux", "Red", "Bold", "Cabernet Sauvignon"]
+        ],
+        expected_prediction_count=1,
+    )
 
-    @patch("google.cloud.aiplatform.init")
-    def test_vertex_ai_initialization(self, mock_init):
-        """Test Vertex AI initialization for validation."""
-        from google.cloud import aiplatform  # pylint: disable=import-outside-toplevel
+    mock_init.assert_called_once_with(project="test-project", location="europe-west2")
 
-        project = "test-project"
-        region = "europe-west2"
-        aiplatform.init(project=project, location=region)
-        mock_init.assert_called_once_with(project=project, location=region)
+    mock_endpoint_class.assert_called_once_with(
+        "projects/test-project/locations/europe-west2/endpoints/123"
+    )
+    mock_endpoint.predict.assert_called_once_with(
+        instances=[[25.99, "France", "Bordeaux", "Red", "Bold", "Cabernet Sauvignon"]]
+    )
 
-    @patch("google.cloud.aiplatform.Endpoint")
-    def test_endpoint_loading_for_validation(self, mock_endpoint_class):
-        """Test loading endpoint for validation."""
-        mock_endpoint = MagicMock()
-        mock_endpoint_class.return_value = mock_endpoint
-        from google.cloud import aiplatform  # pylint: disable=import-outside-toplevel
+    # Verify validation results
+    assert (
+        mock_validation_output.uri
+        == "projects/test-project/locations/europe-west2/endpoints/123"
+    )
+    metadata = mock_validation_output.metadata
+    assert metadata["status"] == "PASSED"
+    assert metadata["test_instances_count"] == 1
+    assert metadata["predictions_count"] == 1
+    assert metadata["sample_prediction"] == 4.2
 
-        endpoint_resource_name = "projects/test/locations/europe-west2/endpoints/789"
-        endpoint = aiplatform.Endpoint(endpoint_resource_name)
-        assert endpoint == mock_endpoint
 
-    @patch("google.cloud.aiplatform.Endpoint")
-    def test_prediction_request(self, mock_endpoint_class):
-        """Test prediction request logic."""
-        mock_endpoint = MagicMock()
-        mock_response = MagicMock()
-        mock_response.predictions = [{"quality_score": 0.85}]
-        mock_endpoint.predict.return_value = mock_response
-        mock_endpoint_class.return_value = mock_endpoint
+@patch("google.cloud.aiplatform.init")
+@patch("google.cloud.aiplatform.Endpoint")
+def test_validate_model_endpoint_missing_uri(mock_endpoint_class, _mock_init):
+    """Test validation fails when endpoint URI is missing."""
+    # Mock input endpoint with no URI
+    mock_input_endpoint = MagicMock(spec=Model)
+    mock_input_endpoint.uri = None  # Missing URI
 
-        from google.cloud import aiplatform  # pylint: disable=import-outside-toplevel
+    mock_validation_output = MagicMock(spec=Model)
+    mock_validation_output.metadata = {}
 
-        endpoint = aiplatform.Endpoint("endpoint-resource-name")
-        test_instances = [
-            [39.99, "France", "Bordeaux", "Red", "Bold", "Cabernet Sauvignon"]
-        ]
-        response = endpoint.predict(instances=test_instances)
-        mock_endpoint.predict.assert_called_once_with(instances=test_instances)
-        assert len(response.predictions) == 1
+    # Test should fail with missing URI
+    with pytest.raises(ValueError, match="Endpoint resource_name is missing"):
+        validate_model_endpoint_func(
+            endpoint=mock_input_endpoint,
+            validation_output=mock_validation_output,
+            project="test-project",
+            region="europe-west2",
+        )
 
-    def test_default_test_instances_configuration(self):
-        """Test default wine test instances configuration."""
-        default_instances = [
-            [39.99, "France", "Bordeaux", "Red", "Bold", "Cabernet Sauvignon"]
-        ]
-        # Validate test instance structure
-        assert len(default_instances) == 1
-        assert len(default_instances[0]) == 6
-        assert isinstance(default_instances[0][0], float)  # price
-        assert isinstance(default_instances[0][1], str)  # country
-        assert isinstance(default_instances[0][2], str)  # region
+    # Verify endpoint was not called
+    mock_endpoint_class.assert_not_called()
 
-    def test_validation_response_structure(self):
-        """Test prediction response validation logic."""
-        # Valid response
-        valid_response = MagicMock()
-        valid_response.predictions = [{"score": 0.85}]
-        assert hasattr(valid_response, "predictions")
-        assert isinstance(valid_response.predictions, list)
-        assert len(valid_response.predictions) == 1
-        # Invalid response
-        invalid_response = MagicMock()
-        del invalid_response.predictions
-        assert not hasattr(invalid_response, "predictions")
 
-    def test_prediction_count_validation(self):
-        """Test prediction count validation logic."""
-        predictions = [{"score": 0.85}, {"score": 0.92}]
-        expected_count = 2
-        assert len(predictions) == expected_count
-        assert isinstance(predictions, list)
-        # Test mismatch
-        wrong_expected_count = 1
-        assert len(predictions) != wrong_expected_count
+@patch("google.cloud.aiplatform.init")
+@patch("google.cloud.aiplatform.Endpoint")
+def test_validate_model_endpoint_prediction_failure(mock_endpoint_class, _mock_init):
+    """Test validation fails when prediction request fails."""
+    mock_endpoint = MagicMock()
+    mock_endpoint.resource_name = (
+        "projects/test-project/locations/europe-west2/endpoints/456"
+    )
+    mock_endpoint_class.return_value = mock_endpoint
 
-    def test_validation_metadata_structure(self):
-        """Test validation result metadata structure."""
-        success_metadata = {
-            "status": "PASSED",
-            "endpoint": "projects/test/locations/europe-west2/endpoints/789",
-            "test_instances_count": 1,
-            "predictions_count": 1,
-            "sample_prediction": {"quality_score": 0.85},
-        }
-        failure_metadata = {
-            "status": "FAILED",
-            "endpoint": "projects/test/locations/europe-west2/endpoints/789",
-            "error": "Prediction failed",
-        }  # pylint: disable=line-too-long
-        # Validate success metadata
-        assert success_metadata["status"] == "PASSED"
-        assert "endpoint" in success_metadata
-        assert "test_instances_count" in success_metadata
-        assert success_metadata["predictions_count"] >= 1
-        # Validate failure metadata
-        assert failure_metadata["status"] == "FAILED"
-        assert "error" in failure_metadata
-        assert "endpoint" in failure_metadata
+    # Mock prediction failure
+    mock_endpoint.predict.side_effect = Exception("Prediction service unavailable")
+    mock_input_endpoint = MagicMock(spec=Model)
+    mock_input_endpoint.uri = (
+        "projects/test-project/locations/europe-west2/endpoints/456"
+    )
+    mock_validation_output = MagicMock(spec=Model)
+    mock_validation_output.metadata = {}
 
-    @patch("google.cloud.aiplatform.Endpoint")
-    def test_model_prediction_validation(self, mock_endpoint_class):
-        """Test validating model predictions."""
-        mock_endpoint = MagicMock()
-        mock_response = MagicMock()
-        mock_response.predictions = [{"quality_score": 0.85, "confidence": 0.92}]
-        mock_endpoint.predict.return_value = mock_response
-        mock_endpoint_class.return_value = mock_endpoint
-        from google.cloud import aiplatform  # pylint: disable=import-outside-toplevel
+    # Test should fail with prediction error
+    with pytest.raises(Exception, match="Prediction service unavailable"):
+        validate_model_endpoint_func(
+            endpoint=mock_input_endpoint,
+            validation_output=mock_validation_output,
+            project="test-project",
+            region="europe-west2",
+        )
 
-        endpoint = aiplatform.Endpoint("endpoint-resource-name")
-        test_instances = [
-            [39.99, "France", "Bordeaux", "Red", "Bold", "Cabernet Sauvignon"]
-        ]
-        response = endpoint.predict(instances=test_instances)
-        predictions = response.predictions
-        # Validate prediction structure
-        assert len(predictions) == 1
-        assert "quality_score" in predictions[0]
-        assert isinstance(predictions[0]["quality_score"], float)
-        assert 0 <= predictions[0]["quality_score"] <= 1
+    # Verify failure metadata was set
+    metadata = mock_validation_output.metadata
+    assert metadata["status"] == "FAILED"
+    assert "Prediction service unavailable" in metadata["error"]
+
+
+@patch("google.cloud.aiplatform.init")
+@patch("google.cloud.aiplatform.Endpoint")
+def test_validate_model_endpoint_wrong_prediction_count(
+    mock_endpoint_class, _mock_init
+):
+    """Test validation fails when prediction count doesn't match expected."""
+    mock_endpoint = MagicMock()
+    mock_endpoint.resource_name = (
+        "projects/test-project/locations/europe-west2/endpoints/789"
+    )
+    mock_endpoint_class.return_value = mock_endpoint
+
+    # Mock response with wrong prediction count
+    mock_response = MagicMock()
+    mock_response.predictions = [4.2, 3.8]  # 2 predictions instead of expected 1
+    mock_endpoint.predict.return_value = mock_response
+    mock_input_endpoint = MagicMock(spec=Model)
+    mock_input_endpoint.uri = (
+        "projects/test-project/locations/europe-west2/endpoints/789"
+    )
+    mock_validation_output = MagicMock(spec=Model)
+    mock_validation_output.metadata = {}
+
+    # Test should fail with wrong prediction count
+    with pytest.raises(ValueError, match="Expected predictions count"):
+        validate_model_endpoint_func(
+            endpoint=mock_input_endpoint,
+            validation_output=mock_validation_output,
+            project="test-project",
+            region="europe-west2",
+            expected_prediction_count=1,  # Expect 1, but getting 2
+        )
+
+
+def test_validate_model_endpoint_default_test_instances():
+    """Test that default test instances are properly set."""
+    test_instances = None
+
+    # Simulate the default logic from the component
+    if test_instances is None:
+        test_instances = [[3.99, "Italy", "Tuscany", "White", "Light", "Pinot Grigio"]]
+
+    # Verify default instances
+    assert len(test_instances) == 1
+    assert len(test_instances[0]) == 6  # 6 features per instance
+    assert test_instances[0][0] == 3.99  # Price
+    assert test_instances[0][1] == "Italy"  # Country
+    assert test_instances[0][2] == "Tuscany"  # Region

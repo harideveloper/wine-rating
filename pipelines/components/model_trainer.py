@@ -1,21 +1,21 @@
 """Model trainer component for wine quality pipeline."""
 
 from kfp.v2.dsl import Dataset, Model, Input, Output, component
-from constants import BASE_CONTAINER_IMAGE
+from pipelines.components.constants import BASE_CONTAINER_IMAGE
 
 
+# pylint: disable=import-outside-toplevel,too-many-locals,broad-exception-caught,too-many-branches,too-many-statements
 @component(
     packages_to_install=["pandas", "numpy", "scikit-learn"],
     base_image=BASE_CONTAINER_IMAGE,
 )
 def train_model(
     train_data: Input[Dataset],
-    output_model: Output[Model],
+    trained_model: Output[Model],
     n_estimators: int,
     random_state: int,
 ):
     """Trains a wine rating prediction model using RandomForestRegressor."""
-    # pylint: disable=import-outside-toplevel,too-many-locals
     import pandas as pd
     import joblib
     import logging
@@ -42,11 +42,16 @@ def train_model(
         numeric_features = [col for col in numeric_features if col in df.columns]
         feature_order = numeric_features + categorical_features
         target = "Rating"
+
         logging.info(
             "Features - Numeric: %s, Categorical: %s",
             len(numeric_features),
             len(categorical_features),
         )
+
+        # Validate target column exists
+        if target not in df.columns:
+            raise KeyError(f"Target column '{target}' not found in training data")
 
         # Create preprocessing pipeline
         preprocessor = ColumnTransformer(
@@ -72,7 +77,8 @@ def train_model(
             ],
             remainder="passthrough",
         )
-        # model pipeline
+
+        # Create model pipeline
         model_pipeline = Pipeline(
             steps=[
                 ("preprocessor", preprocessor),
@@ -88,22 +94,26 @@ def train_model(
         # Prepare training data
         features_data = df[feature_order].values
         target_data = df[target].values
-        logging.info("Training RandomForest with %s estimators", n_estimators)
 
         # Train model
+        logging.info("Training RandomForest with %s estimators", n_estimators)
         model_pipeline.fit(features_data, target_data)
         logging.info("Model training completed successfully")
 
         # Save model
-        file_name = output_model.path + ".joblib"
+        file_name = trained_model.path + ".joblib"
         with open(file_name, "wb") as file:
             joblib.dump(model_pipeline, file)
+        logging.info("Model saved successfully to: %s", file_name)
 
         # Set model metadata
-        output_model.metadata["framework"] = "sklearn"
-        output_model.metadata["feature_order"] = str(feature_order)
-        output_model.metadata["target"] = target
-        logging.info("Model saved successfully")
+        try:
+            trained_model.metadata["framework"] = "sklearn"
+            trained_model.metadata["feature_order"] = str(feature_order)
+            trained_model.metadata["target"] = target
+            logging.info("Model metadata set successfully")
+        except Exception as e:
+            logging.warning("Failed to set model metadata: %s", e)
     except Exception as e:
         logging.error("Model training failed: %s", e)
         raise

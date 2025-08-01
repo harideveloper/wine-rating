@@ -1,8 +1,9 @@
 """Wine quality online prediction pipeline component."""
 
-import logging
-from kfp.v2 import dsl, compiler
-from components import (
+from typing import Optional
+from kfp.v2 import dsl
+from google.oauth2.credentials import Credentials
+from pipelines.components import (
     load_data,
     preprocess_data,
     train_model,
@@ -10,14 +11,16 @@ from components import (
     save_model,
     register_model,
     deploy_model,
-    validate_model,
+    validate_model_endpoint,
 )
-from constants import (
+from pipelines.training.constants import (
     PIPELINE_JOB_DISPLAY_NAME,
     PIPELINE_JOB_DISPLAY_DESC,
 )
+from pipelines.shared.pipeline_base_utils import compile_and_upload_pipeline
 
 
+# pylint: disable=too-many-arguments, too-many-positional-arguments, too-many-locals, no-value-for-parameter
 @dsl.pipeline(name=PIPELINE_JOB_DISPLAY_NAME, description=PIPELINE_JOB_DISPLAY_DESC)
 def wine_quality_online_predictor_pipeline(
     data_path: str,
@@ -33,9 +36,11 @@ def wine_quality_online_predictor_pipeline(
     min_replica_count: int,
     max_replica_count: int,
     model_serving_image: str,
+    build_number: str,
 ):
     """
     Create wine quality online prediction pipeline.
+
     Args:
         data_path: GCS path to training data
         model_display_name: Display name for the model
@@ -50,53 +55,66 @@ def wine_quality_online_predictor_pipeline(
         min_replica_count: Minimum replicas for serving
         max_replica_count: Maximum replicas for serving
         model_serving_image: Container image for serving
+        build_number: Build number for the training pipeline
     """
-    # pylint: disable=too-many-arguments, too-many-locals, too-many-arguments, no-value-for-parameter
+    # Load and preprocess data
     load_task = load_data(data_path=data_path)
+
     preprocess_task = preprocess_data(
         input_data=load_task.outputs["output_data"],
         test_size=test_size,
         random_state=random_state,
     )
+
+    # Train model
     train_task = train_model(
         train_data=preprocess_task.outputs["train_data"],
         n_estimators=n_estimators,
         random_state=random_state,
     )
+
+    # Evaluate model
     evaluate_task = evaluate_model(
-        model_artifact=train_task.outputs["output_model"],
+        trained_model=train_task.outputs["trained_model"],
         test_data=preprocess_task.outputs["test_data"],
     )
+
+    # Conditional deployment based on evaluation threshold
     with dsl.Condition(
-        # evaluate_task.output >= evaluation_threshold, 
         evaluate_task.outputs["Output"] >= evaluation_threshold,
-        name="model deployment"
+        name="model deployment",
     ):
-        # save_task = save_model(model_artifact=train_task.outputs["output_model"])
-        save_task = save_model(model_artifact=evaluate_task.outputs["evaluated_model"])
+        # Save model
+        save_task = save_model(evaluated_model=evaluate_task.outputs["evaluated_model"])
+
+        # Register model
         register_task = register_model(
-            model_artifact=save_task.outputs["uploaded_model_artifact"],
-            # model_artifact=evaluate_task.outputs["evaluated_model"],
+            saved_model=save_task.outputs["saved_model"],
             model_display_name=model_display_name,
             project=project,
             region=region,
             model_serving_image=model_serving_image,
+            build_number=build_number,
         )
-        # deploy_task = deploy_model(
-        #     model_registry_name=register_task.outputs["registered_model"],
-        #     endpoint_display_name=endpoint_display_name,
-        #     project=project,
-        #     region=region,
-        #     machine_type=machine_type,
-        #     min_replica_count=min_replica_count,
-        #     max_replica_count=max_replica_count,
-        # )
-        # validate_task = validate_model(
-        #     endpoint=deploy_task.outputs["endpoint"],
-        #     project=project,
-        #     region=region,
-        # )
-        # validate_task.after(deploy_task)
+
+        # Deploy model
+        deploy_task = deploy_model(
+            registered_model=register_task.outputs["registered_model"],
+            endpoint_display_name=endpoint_display_name,
+            project=project,
+            region=region,
+            machine_type=machine_type,
+            min_replica_count=min_replica_count,
+            max_replica_count=max_replica_count,
+        )
+
+        # Validate endpoint
+        validate_task = validate_model_endpoint(
+            endpoint=deploy_task.outputs["deployed_model"],
+            project=project,
+            region=region,
+        )
+        validate_task.after(deploy_task)
 
 
 def compile_pipeline(
@@ -104,44 +122,26 @@ def compile_pipeline(
     pipeline_file_name: str,
     pipeline_storage_bucket: str,
     project: str,
-    credentials: str,
-) -> str:  # pylint: disable=line-too-long
+    credentials: Optional[Credentials] = None,
+) -> str:
     """
     Compile the wine quality prediction pipeline and upload to Cloud Storage.
-    Args:
-        pipeline_name: pipeline name (e.g., "wine_quality_pipeline")
-        pipeline_file_name: pipeline file name (e.g., "training.json")
-        pipeline_storage_bucket: GCS bucket name to store the pipeline (without gs:// prefix)
-        project: Google Cloud project ID
-        credentials : Google Cloud Auth Credentials
-    Returns:
-        str: GCS URI of the compiled pipeline JSON (gs://bucket/pipeline_file_name)
-    Raises:
-        Exception: If compilation or upload fails
-    """
-    # pylint: disable=import-outside-toplevel
-    import os
-    from google.cloud import storage
 
-    pipeline_gcs_path = f"{pipeline_name}/{pipeline_file_name}"
-    pipeline_file_gcs_uri = f"gs://{pipeline_storage_bucket}/{pipeline_gcs_path}"
-    try:
-        compiler.Compiler().compile(
-            pipeline_func=wine_quality_online_predictor_pipeline,
-            package_path=pipeline_file_name,
-        )  # pylint: disable=line-too-long
-        # storage_client = storage.Client(project=project, credentials=credentials)
-        storage_client = storage.Client(project=project)
-        bucket = storage_client.bucket(pipeline_storage_bucket)
-        blob = bucket.blob(pipeline_gcs_path)
-        blob.upload_from_filename(pipeline_file_name)
-        logging.info(
-            "Pipeline compilation completed successfully to %s", pipeline_file_gcs_uri
-        )
-        return pipeline_file_gcs_uri
-    except Exception as e:
-        logging.error("Pipeline compilation failed for project %s: %s", project, str(e))
-        raise e
-    finally:
-        if os.path.exists(pipeline_file_name):
-            os.unlink(pipeline_file_name)
+    Args:
+        pipeline_name: Pipeline name (e.g., "wine_quality_pipeline")
+        pipeline_file_name: Pipeline file name (e.g., "training.json")
+        pipeline_storage_bucket: GCS bucket name (without gs:// prefix)
+        project: Google Cloud project ID
+        credentials: Google Cloud credentials (optional for local environments)
+
+    Returns:
+        str: GCS URI of the compiled pipeline JSON
+    """
+    return compile_and_upload_pipeline(
+        pipeline_function=wine_quality_online_predictor_pipeline,
+        pipeline_name=pipeline_name,
+        pipeline_file_name=pipeline_file_name,
+        pipeline_storage_bucket=pipeline_storage_bucket,
+        project=project,
+        credentials=credentials,
+    )

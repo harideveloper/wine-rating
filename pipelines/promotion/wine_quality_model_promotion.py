@@ -1,97 +1,104 @@
-import logging
-from kfp.v2 import dsl,compiler
-from kfp.v2.dsl import component, Model, Output, Condition
+"""Wine quality online prediction model promotion pipeline."""
 
-
-@component(packages_to_install=["google-cloud-aiplatform"])
-def fetch_model(
-    model_display_name: str,
-    project: str,
-    location: str,
-) -> str:
-    """Fetch latest model with given name that has label `ready-for-promotion: true`."""
-    from google.cloud import aiplatform
-
-    aiplatform.init(project=project, location=location)
-    models = aiplatform.Model.list(filter=f'display_name="{model_display_name}"')
-
-    if not models:
-        raise ValueError(f"No models found with display name: {model_display_name}")
-
-    # Sort by creation time (latest first)
-    sorted_models = sorted(models, key=lambda m: m.create_time, reverse=True)
-
-    for model in sorted_models:
-        labels = model.labels or {}
-        if labels.get("ready-for-promotion", "").lower() == "true":
-            return model.resource_name
-
-    raise ValueError(f"No models with required labels: ready-for-promotion=true")
-
-
-@component(packages_to_install=["google-cloud-aiplatform"])
-def promote_model(
-    model_resource_name: str,
-    source_project: str,
-    target_project: str,
-    location: str,
-    promoted_model: Output[Model]
-):
-    """Copy model to target project with production tag."""
-    from google.cloud import aiplatform
-    import datetime
-
-    aiplatform.init(project=source_project, location=location)
-    source_model = aiplatform.Model(model_resource_name)
-
-    aiplatform.init(project=target_project, location=location)
-    prod_labels = (source_model.labels or {}).copy()
-    prod_labels.update({
-        "environment": "production",
-        "promoted-from": source_project,
-        "promotion-date": datetime.datetime.utcnow().date().isoformat()
-    })
-
-    target_display_name = f"{source_model.display_name}_prod"
-
-    new_model = aiplatform.Model.upload(
-        display_name=target_display_name,
-        artifact_uri=source_model.uri,
-        serving_container_image_uri=source_model.container_spec.image_uri,
-        labels=prod_labels,
-        description=f"Promoted from {source_project}",
-        sync=True
-    )
-
-    promoted_model.uri = new_model.resource_name
-    promoted_model.metadata["display_name"] = new_model.display_name
-
-
-@dsl.pipeline(
-    name="simplified-model-promotion",
-    description="Promote model with minimal validation"
+from typing import Optional
+from kfp.v2 import dsl
+from google.oauth2.credentials import Credentials
+from pipelines.components import (
+    fetch_model,
+    promotion_gate,
+    promote_model,
+    deploy_model,
+    validate_model_endpoint,
 )
+from pipelines.shared.pipeline_base_utils import compile_and_upload_pipeline
+from pipelines.promotion.constants import (
+    PROMOTION_JOB_DISPLAY_NAME,
+    PROMOTION_JOB_DISPLAY_DESC,
+)
+
+
+# pylint: disable=too-many-arguments, too-many-positional-arguments, too-many-locals, no-value-for-parameter
+@dsl.pipeline(name=PROMOTION_JOB_DISPLAY_NAME, description=PROMOTION_JOB_DISPLAY_DESC)
 def model_promotion_pipeline(
     model_display_name: str,
+    endpoint_display_name: str,
     source_project: str,
     target_project: str,
-    location: str,
+    region: str,
+    machine_type: str,
+    min_replica_count: int,
+    max_replica_count: int,
+    promotion_threshold: float = 0.95,
 ):
-    # Step 1: Get latest promotable model
+    """
+    Create wine quality online promotion pipeline with gate.
+
+    Pipeline Flow:
+    1. Fetch model and extract metadata from registry
+    2. Check promotion gate (validate promotion criteria)
+    3. Promote model (only if gate passes)
+    4. Deploy to target environment
+    5. Validate deployment endpoint sending sample requests
+
+    Args:
+        model_display_name: model display name from source model registry
+        endpoint_display_name: model endpoint display name
+        source_project: gcp project for prod test spoke
+        target_project: gcp project for prod workload spoke
+        region: gcp region
+        machine_type: machine type for deployment
+        min_replica_count: Minimum replicas for serving
+        max_replica_count: Maximum replicas for serving
+        promotion_threshold: Quality score threshold for promotion gate (default: 0.95)
+    """
+
+    # Step 1: Fetch model and extract metadata from registry labels
     fetch_model_task = fetch_model(
         model_display_name=model_display_name,
         project=source_project,
-        location=location,
+        location=region,
     )
-    # evaluate_metrics()
 
-    # Step 2: Promote to target project
-    promote_model(
-        model_resource_name=fetch_model_task.output,
-        source_project=source_project,
-        target_project=target_project,
-        location=location
+    # Step 2: Check promotion gate (validate criteria)
+    promotion_gate_task = promotion_gate(
+        fetched_model=fetch_model_task.outputs["fetched_model"],
+        promotion_threshold=promotion_threshold,
     )
+
+    # Step 3: Conditional promotion based on gate result
+    with dsl.Condition(
+        promotion_gate_task.output == "True",  # pylint: disable=no-member
+        name="promotion_gate_passed",
+    ):
+        # Step 4: Promote model to target project
+        promote_model_task = promote_model(
+            fetched_model=fetch_model_task.outputs["fetched_model"],
+            source_project=source_project,
+            target_project=target_project,
+            location=region,
+        )
+
+        # Step 5: Deploy promoted model
+        deploy_task = deploy_model(
+            registered_model=promote_model_task.outputs["promoted_model"],
+            endpoint_display_name=endpoint_display_name,
+            project=target_project,
+            region=region,
+            machine_type=machine_type,
+            min_replica_count=min_replica_count,
+            max_replica_count=max_replica_count,
+        )
+
+        # Step 6: Validate deployment endpoint
+        validate_task = validate_model_endpoint(
+            endpoint=deploy_task.outputs["deployed_model"],
+            project=target_project,
+            region=region,
+        )
+
+        promote_model_task.after(promotion_gate_task)
+        deploy_task.after(promote_model_task)
+        validate_task.after(deploy_task)
 
 
 def compile_pipeline(
@@ -99,33 +106,26 @@ def compile_pipeline(
     pipeline_file_name: str,
     pipeline_storage_bucket: str,
     project: str,
-    credentials
+    credentials: Optional[Credentials] = None,
 ) -> str:
-    """Compile the model promotion pipeline and upload to Cloud Storage."""
-    try:
-        logging.info("Compiling model promotion pipeline")
-        
-        # Compile pipeline
-        compiler.Compiler().compile(
-            pipeline_func=model_promotion_pipeline,
-            package_path=pipeline_file_name
-        )
-        
-        # Upload to GCS
-        from google.cloud import storage
-        
-        client = storage.Client(project=project)
-        bucket = client.bucket(pipeline_storage_bucket)
-        blob = bucket.blob(pipeline_file_name)
-        
-        with open(pipeline_file_name, 'rb') as f:
-            blob.upload_from_file(f)
-        
-        gcs_uri = f"gs://{pipeline_storage_bucket}/{pipeline_file_name}"
-        logging.info(f"Pipeline compiled and uploaded to: {gcs_uri}")
-        
-        return gcs_uri
-        
-    except Exception as e:
-        logging.error(f"Pipeline compilation failed: {str(e)}")
-        raise
+    """
+    Compile the wine quality prediction pipeline and upload to Cloud Storage.
+
+    Args:
+        pipeline_name: Pipeline name (e.g., "wine_quality_pipeline")
+        pipeline_file_name: Pipeline file name (e.g., "training.json")
+        pipeline_storage_bucket: GCS bucket name (without gs:// prefix)
+        project: Google Cloud project ID
+        credentials: Google Cloud credentials (optional for local environments)
+
+    Returns:
+        str: GCS URI of the compiled pipeline JSON
+    """
+    return compile_and_upload_pipeline(
+        pipeline_function=model_promotion_pipeline,
+        pipeline_name=pipeline_name,
+        pipeline_file_name=pipeline_file_name,
+        pipeline_storage_bucket=pipeline_storage_bucket,
+        project=project,
+        credentials=credentials,
+    )

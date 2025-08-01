@@ -32,23 +32,42 @@ eda:
 
 .PHONY: test-components
 test-components:
-	$(PYTHON_VENV) -m pytest --pyargs $(PIPELINE_DIR)/components -v
+# 	$(PYTHON_VENV) -m pytest --pyargs $(PIPELINE_DIR)/components/tests -v
+	PYTHONPATH=$(PIPELINE_DIR) $(PYTHON_VENV) -m pytest pipelines/components/tests -v
 
-.PHONY: e2e-test
-e2e-test:
-	$(PYTHON_VENV) -m pytest --pyargs $(PIPELINE_DIR)/training -v
+.PHONY: test-shared
+test-shared:
+# 	$(PYTHON_VENV) -m pytest --pyargs $(PIPELINE_DIR)shared/tests -v
+# 	$(PYTHON_VENV) -m pytest $(PIPELINE_DIR)/shared/tests -v
+	PYTHONPATH=$(PIPELINE_DIR) $(PYTHON_VENV) -m pytest pipelines/shared/tests -v
+
+.PHONY: e2e-train
+e2e-train:
+# 	$(PYTHON_VENV) -m pytest --pyargs $(PIPELINE_DIR)/training -v
+# 	PYTHONPATH=. python pipelines/run_pipeline.py --pipeline training
+	PYTHONPATH=$(PIPELINE_DIR) $(PYTHON_VENV) -m pytest $(PIPELINE_DIR)/training -v
+
+.PHONY: e2e-promote
+e2e-promote:
+# 	$(PYTHON_VENV) -m pytest --pyargs $(PIPELINE_DIR)/training -v
+	PYTHONPATH=$(PIPELINE_DIR) $(PYTHON_VENV) -m pytest $(PIPELINE_DIR)/promotion -v
 
 .PHONY: test-coverage
 test-coverage:
-	$(PYTHON_VENV) -m pytest $(PIPELINE_DIR) --cov=components --cov-report=html --cov-report=term
+	$(PYTHON_VENV) -m pytest $(PIPELINE_DIR) --cov=pipelines --cov-report=html --cov-report=term
 
-.PHONY: run
-run:
-	$(PYTHON_VENV) pipelines/run_pipeline.py
+.PHONY: train
+train:
+# 	$(PYTHON_VENV) pipelines/run_training_pipeline.py
+# 	python pipelines/run_pipeline.py --pipeline training
+	PYTHONPATH=. python pipelines/run_pipeline.py --pipeline training
 
 .PHONY: promote
 promote:
-	$(PYTHON_VENV) pipelines/run_promotion.py
+# 	$(PYTHON_VENV) pipelines/run_promotion_pipeline.py
+# 	python pipelines/run_pipeline.py --pipeline promotion
+	PYTHONPATH=. python pipelines/run_pipeline.py --pipeline promotion
+
 
 .PHONY: test-predict
 test-predict: 

@@ -1,22 +1,22 @@
 """Model saver component for wine quality pipeline."""
 
 from kfp.v2.dsl import Model, Input, Output, component
-from constants import BASE_CONTAINER_IMAGE
+from pipelines.components.constants import BASE_CONTAINER_IMAGE
 
 
+# pylint: disable=import-outside-toplevel, too-many-arguments, broad-exception-caught, too-many-positional-arguments, too-many-locals
 @component(
     packages_to_install=["google-cloud-storage"], base_image=BASE_CONTAINER_IMAGE
 )
-def save_model(model_artifact: Input[Model], uploaded_model_artifact: Output[Model]):
+def save_model(evaluated_model: Input[Model], saved_model: Output[Model]):
     """Uploads the wine rating model artifact."""
-    # pylint: disable=import-outside-toplevel
     import os
     import logging
 
     try:
         logging.info("Starting model save process")
-        source_path = model_artifact.path + ".joblib"
-        model_dir = os.path.dirname(uploaded_model_artifact.path)
+        source_path = evaluated_model.path + ".joblib"
+        model_dir = os.path.dirname(saved_model.path)
         model_file_path = os.path.join(model_dir, "model.joblib")
         logging.info("Preparing model directory")
         os.makedirs(model_dir, exist_ok=True)
@@ -26,11 +26,11 @@ def save_model(model_artifact: Input[Model], uploaded_model_artifact: Output[Mod
         with open(model_file_path, "wb") as target_file:
             target_file.write(model_data)
         logging.info("Model file copied successfully")
-        uploaded_model_artifact.uri = model_dir
+        saved_model.uri = model_dir
         metadata_count = 0
-        for key, value in model_artifact.metadata.items():
+        for key, value in evaluated_model.metadata.items():
             try:
-                uploaded_model_artifact.metadata[key] = value
+                saved_model.metadata[key] = value
                 metadata_count += 1
             except (TypeError, ValueError) as metadata_error:
                 logging.warning(

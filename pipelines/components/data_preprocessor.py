@@ -2,10 +2,10 @@
 
 # pylint: disable=line-too-long
 from kfp.v2.dsl import component, Input, Output, Dataset
-from constants import BASE_CONTAINER_IMAGE
+from pipelines.components.constants import BASE_CONTAINER_IMAGE
 
 
-# pylint: disable=too-many-arguments, too-many-arguments, too-many-locals
+# pylint: disable=import-outside-toplevel, too-many-arguments, broad-exception-caught, too-many-positional-arguments, too-many-locals
 @component(
     packages_to_install=["pandas", "numpy", "scikit-learn"],
     base_image=BASE_CONTAINER_IMAGE,
@@ -19,7 +19,6 @@ def preprocess_data(
     random_state: int = 42,
 ):
     """Preprocesses the wine data for the prediction model."""
-    # pylint: disable=import-outside-toplevel
     import pandas as pd
     import re
     import logging

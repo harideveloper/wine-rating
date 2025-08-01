@@ -1,9 +1,10 @@
 """Data loader component for wine quality pipeline."""
 
 from kfp.v2.dsl import component, Output, Dataset
-from constants import BASE_CONTAINER_IMAGE
+from pipelines.components.constants import BASE_CONTAINER_IMAGE
 
 
+# pylint: disable=import-outside-toplevel,broad-exception-caught
 @component(
     packages_to_install=["pandas", "google-cloud-storage"],
     base_image=BASE_CONTAINER_IMAGE,
@@ -11,11 +12,8 @@ from constants import BASE_CONTAINER_IMAGE
 def load_data(data_path: str, output_data: Output[Dataset]) -> None:
     """
     Load wine quality data from Google Cloud Storage.
-    Args:
-        data_path: GCS path to the wine dataset (gs://bucket/path/file.csv)
-        output_data: Output dataset artifact for downstream components
+
     """
-    # pylint: disable=import-outside-toplevel
     import pandas as pd
     from google.cloud import storage
     import io
