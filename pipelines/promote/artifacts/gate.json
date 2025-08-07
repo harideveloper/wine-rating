@@ -1,0 +1,9 @@
+{
+  "gate_passed": true,
+  "quality_score": 0.9997,
+  "threshold": 0.9,
+  "eval_status": "completed",
+  "ready_for_promotion": "true",
+  "model_uri": "projects/212373574046/locations/europe-west2/models/5356631534524694528",
+  "display_name": "wine-quality-online-prediction-model"
+}
