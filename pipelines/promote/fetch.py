@@ -6,6 +6,7 @@ import logging
 import os
 from google.cloud import aiplatform
 from constants import SOURCE_PROJECT_ID, REGION, MODEL_DISPLAY_NAME
+from utils import init_vertex_ai
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -17,7 +18,7 @@ def main():
     logger.info("From project: %s", SOURCE_PROJECT_ID)
     
     # Initialize Vertex AI
-    aiplatform.init(project=SOURCE_PROJECT_ID, location=REGION)
+    init_vertex_ai(SOURCE_PROJECT_ID, REGION)
     
     # Find models
     models = aiplatform.Model.list(filter=f'display_name="{MODEL_DISPLAY_NAME}"')

@@ -10,6 +10,7 @@ from constants import (
     REGION, 
     MODEL_SERVING_IMAGE
 )
+from utils import init_vertex_ai
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -35,13 +36,14 @@ def main():
     logger.info("To: %s", TARGET_PROJECT_ID)
     
     # Get source model
-    aiplatform.init(project=SOURCE_PROJECT_ID, location=REGION)
+    logger.info("Accessing source model")
+    init_vertex_ai(SOURCE_PROJECT_ID, REGION)
     source_model = aiplatform.Model(model_uri)
     
-    # Switch to target project
-    aiplatform.init(project=TARGET_PROJECT_ID, location=REGION)
+    # Switch to target project and register model
+    logger.info("Switching to target project for registration")
+    init_vertex_ai(TARGET_PROJECT_ID, REGION)
     
-    # Register model in target project
     target_model = aiplatform.Model.upload(
         display_name=display_name,
         artifact_uri=source_model.uri,

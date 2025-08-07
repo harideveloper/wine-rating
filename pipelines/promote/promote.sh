@@ -13,7 +13,8 @@ export PROMOTION_THRESHOLD="0.9"
 export APPLICATION="wine-quality"
 export TYPE="promotion"
 export HARNESS_BUILD_ID="local"
-export IS_LOCAL="true"
+export IS_LOCAL="false"
+export PIPELINE_SA="1035860259529-compute@developer.gserviceaccount.com"
 
 # Create artifacts directory
 mkdir -p artifacts
@@ -36,25 +37,25 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-echo ""
-echo "Step 3: Register Model"
-echo "----------------------"
-python register.py
-if [ $? -ne 0 ]; then
-    echo "Registration failed"
-    exit 1
-fi
+# echo ""
+# echo "Step 3: Register Model"
+# echo "----------------------"
+# python register.py
+# if [ $? -ne 0 ]; then
+#     echo "Registration failed"
+#     exit 1
+# fi
 
-echo ""
-echo "Pipeline completed successfully"
-echo ""
-echo "Generated artifacts:"
-ls -la artifacts/
+# echo ""
+# echo "Pipeline completed successfully"
+# echo ""
+# echo "Generated artifacts:"
+# ls -la artifacts/
 
-# Show final result
-if [ -f "artifacts/registration.json" ]; then
-    echo ""
-    echo "Final Result:"
-    echo "Source: $(cat artifacts/registration.json | python -c "import sys, json; print(json.load(sys.stdin)['source_model_uri'])")"
-    echo "Target: $(cat artifacts/registration.json | python -c "import sys, json; print(json.load(sys.stdin)['target_model_uri'])")"
-fi
+# # Show final result
+# if [ -f "artifacts/registration.json" ]; then
+#     echo ""
+#     echo "Final Result:"
+#     echo "Source: $(cat artifacts/registration.json | python -c "import sys, json; print(json.load(sys.stdin)['source_model_uri'])")"
+#     echo "Target: $(cat artifacts/registration.json | python -c "import sys, json; print(json.load(sys.stdin)['target_model_uri'])")"
+# fi
