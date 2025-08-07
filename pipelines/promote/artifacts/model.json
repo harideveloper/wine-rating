@@ -1,7 +1,13 @@
 {
   "model_uri": "projects/212373574046/locations/europe-west2/models/5356631534524694528",
   "display_name": "wine-quality-online-prediction-model",
-  "quality_score": 0.9997,
+  "resource_name": "projects/212373574046/locations/europe-west2/models/5356631534524694528",
+  "harness_build_id": "local",
   "eval_status": "completed",
-  "ready_for_promotion": "true"
+  "ready_for_promotion": "true",
+  "quality_score": 0.9997,
+  "mae": 0.0003,
+  "mse": 0.0,
+  "r2_score": 0.9998,
+  "rmse": 0.002
 }

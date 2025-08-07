@@ -3,5 +3,14 @@
   "target_model_uri": "projects/1035860259529/locations/europe-west2/models/5617769944168005632",
   "display_name": "wine-quality-online-prediction-model",
   "source_project": "dev2-ea8f",
-  "target_project": "dev1-bfa7"
+  "target_project": "dev1-bfa7",
+  "promotion_date": "2025-08-07",
+  "promotion_timestamp": "2025-08-07T14:10:41.025306+00:00",
+  "model_version": "4",
+  "is_new_model": false,
+  "promotion_status": "completed",
+  "harness_build_id": "local",
+  "quality_score": 0.9997,
+  "eval_status": "completed",
+  "container_image": "europe-docker.pkg.dev/vertex-ai/prediction/sklearn-cpu.1-0:latest"
 }
