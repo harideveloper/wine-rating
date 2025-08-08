@@ -46,3 +46,14 @@ MAX_REPLICA_COUNT = int(os.getenv("MAX_REPLICA_COUNT", "1"))
 # Environment flags
 IS_LOCAL = os.getenv("IS_LOCAL", "true").lower() == "true"
 PROMOTION_THRESHOLD = float(os.getenv("PROMOTION_THRESHOLD", "0.9"))
+
+
+# Source (Download)
+GCS_SOURCE_BUCKET = os.getenv("GCS_SOURCE_BUCKET", "model-build-wine-dev2-ea8f")
+GCS_SOURCE_BLOB = os.getenv("GCS_SOURCE_BLOB", "test/download/model.joblib")
+LOCAL_DOWNLOAD_PATH = os.getenv("LOCAL_DOWNLOAD_PATH", "model.joblib")
+
+# Destination (Upload)
+GCS_DEST_BUCKET = os.getenv("GCS_DEST_BUCKET", "model-build-wine-dev2-ea8f")
+GCS_DEST_BLOB = os.getenv("GCS_DEST_BLOB", "test/upload/model.joblib")
+LOCAL_UPLOAD_PATH = os.getenv("LOCAL_UPLOAD_PATH", "model.joblib")
