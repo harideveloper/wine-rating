@@ -12,6 +12,7 @@ from pipelines.shared.pipeline_base_utils import compile_and_upload_pipeline
 from pipelines.promotion.constants import (
     PROMOTION_JOB_DISPLAY_NAME,
     PROMOTION_JOB_DISPLAY_DESC,
+    MODEL_SERVING_IMAGE,
 )
 
 
@@ -20,16 +21,19 @@ from pipelines.promotion.constants import (
 def model_promotion_pipeline(
     model_display_name: str,
     endpoint_display_name: str,
+    source_project: str,          # Added back for compatibility (unused)
     target_project: str,
     region: str,
     machine_type: str,
     min_replica_count: int,
     max_replica_count: int,
+    promotion_threshold: float,   # Added back for compatibility (unused)
     model_gcs_uri: str,
-    model_serving_image: str,
+    model_serving_image: str = MODEL_SERVING_IMAGE,
     build_number: str = "unknown",
 ):
     """
+    Create simplified promotion pipeline: Register → Deploy → Validate.
 
     Pipeline Flow:
     1. Register model from pre-promoted GCS bucket to Vertex AI Model Registry
@@ -39,11 +43,13 @@ def model_promotion_pipeline(
     Args:
         model_display_name: model display name for registry
         endpoint_display_name: model endpoint display name
+        source_project: source gcp project (unused, for compatibility)
         target_project: gcp project for prod workload
         region: gcp region
         machine_type: machine type for deployment
         min_replica_count: Minimum replicas for serving
         max_replica_count: Maximum replicas for serving
+        promotion_threshold: Quality threshold (unused, for compatibility)
         model_gcs_uri: GCS URI where promoted model artifacts are stored
         model_serving_image: Container image for serving
         build_number: Build identifier for tracking
