@@ -97,24 +97,24 @@ def wine_quality_online_predictor_pipeline(
             build_number=build_number,
         )
 
-        # Deploy model
-        deploy_task = deploy_model(
-            registered_model=register_task.outputs["registered_model"],
-            endpoint_display_name=endpoint_display_name,
-            project=project,
-            region=region,
-            machine_type=machine_type,
-            min_replica_count=min_replica_count,
-            max_replica_count=max_replica_count,
-        )
+        # # Deploy model
+        # deploy_task = deploy_model(
+        #     registered_model=register_task.outputs["registered_model"],
+        #     endpoint_display_name=endpoint_display_name,
+        #     project=project,
+        #     region=region,
+        #     machine_type=machine_type,
+        #     min_replica_count=min_replica_count,
+        #     max_replica_count=max_replica_count,
+        # )
 
-        # Validate endpoint
-        validate_task = validate_model_endpoint(
-            endpoint=deploy_task.outputs["deployed_model"],
-            project=project,
-            region=region,
-        )
-        validate_task.after(deploy_task)
+        # # Validate endpoint
+        # validate_task = validate_model_endpoint(
+        #     endpoint=deploy_task.outputs["deployed_model"],
+        #     project=project,
+        #     region=region,
+        # )
+        # validate_task.after(deploy_task)
 
 
 def compile_pipeline(

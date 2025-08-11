@@ -32,14 +32,18 @@ eda:
 
 .PHONY: test-components
 test-components:
-# 	$(PYTHON_VENV) -m pytest --pyargs $(PIPELINE_DIR)/components/tests -v
-	PYTHONPATH=$(PIPELINE_DIR) $(PYTHON_VENV) -m pytest pipelines/components/tests -v
+	$(PYTHON_VENV) -m pytest --pyargs $(PIPELINE_DIR)/components/tests -v
+# 	PYTHONPATH=$(PIPELINE_DIR) $(PYTHON_VENV) -m pytest pipelines/components/tests -v
 
 .PHONY: test-shared
 test-shared:
 # 	$(PYTHON_VENV) -m pytest --pyargs $(PIPELINE_DIR)shared/tests -v
 # 	$(PYTHON_VENV) -m pytest $(PIPELINE_DIR)/shared/tests -v
 	PYTHONPATH=$(PIPELINE_DIR) $(PYTHON_VENV) -m pytest pipelines/shared/tests -v
+
+.PHONY: test-all
+test-all:
+	PYTHONPATH=$(PIPELINE_DIR) $(PYTHON_VENV) -m pytest pipelines/ -v
 
 .PHONY: e2e-train
 e2e-train:

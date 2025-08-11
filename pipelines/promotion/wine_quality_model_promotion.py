@@ -67,7 +67,7 @@ def model_promotion_pipeline(
 
     # Step 3: Conditional promotion based on gate result
     with dsl.Condition(
-        promotion_gate_task.output == "True",  # pylint: disable=no-member
+        promotion_gate_task.output == True,  # pylint: disable=no-member, singleton-comparison
         name="promotion_gate_passed",
     ):
         # Step 4: Promote model to target project

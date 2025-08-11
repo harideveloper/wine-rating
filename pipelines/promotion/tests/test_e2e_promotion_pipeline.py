@@ -1,5 +1,6 @@
 """End-to-end tests for wine quality model promotion pipeline"""
 
+# pylint: disable=duplicate-code
 import pipelines.promotion.wine_quality_model_promotion as pipeline_module
 from pipelines.promotion.wine_quality_model_promotion import (
     model_promotion_pipeline,

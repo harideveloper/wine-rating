@@ -1,5 +1,6 @@
 """End-to-end tests for wine quality pipeline"""
 
+# pylint: disable=duplicate-code
 from pipelines.training.wine_quality_online_predictor import (
     wine_quality_online_predictor_pipeline,
     load_data,

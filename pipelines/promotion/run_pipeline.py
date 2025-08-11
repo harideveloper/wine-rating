@@ -30,7 +30,7 @@ from pipelines.promotion.constants import (
 )
 
 
-# pylint: disable=too-many-instance-attributes
+# pylint: disable=too-many-instance-attributes, duplicate-code
 @dataclass
 class PromotionPipelineConfig(PipelineConfig):
     """Configuration for model promotion pipeline."""

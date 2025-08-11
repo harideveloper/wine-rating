@@ -38,5 +38,5 @@ MACHINE_TYPE = os.getenv("MACHINE_TYPE", "n1-standard-2")
 MIN_REPLICA_COUNT = os.getenv("MIN_REPLICA_COUNT", "1")
 MAX_REPLICA_COUNT = os.getenv("MAX_REPLICA_COUNT", "1")
 
-IS_LOCAL = os.getenv("IS_LOCAL", "True")
+IS_LOCAL = os.getenv("IS_LOCAL", "true").lower() == "true"
 PROMOTION_THRESHOLD = os.getenv("PROMOTION_THRESHOLD", "0.9")

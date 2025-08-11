@@ -33,7 +33,7 @@ from pipelines.training.constants import (
 )
 
 
-# pylint: disable=too-many-instance-attributes
+# pylint: disable=too-many-instance-attributes, duplicate-code
 @dataclass
 class TrainingPipelineConfig(PipelineConfig):
     """Configuration for wine quality training pipeline."""

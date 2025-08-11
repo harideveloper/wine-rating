@@ -87,7 +87,7 @@ def validate_pipeline_inputs(
         if not value or (isinstance(value, str) and value.strip() == ""):
             raise ValueError( # pylint: disable=raising-format-tuple
                 "Missing Config Parameter for: %s", field
-            )
+            )  
 
     # Validate non-local environment requirements
     if not config.is_local and not config.auth_token:
@@ -205,7 +205,7 @@ def execute_pipeline_job(
     job.run(sync=config.sync)
 
     if config.sync:
-        if job.state == "PIPELINE_STATE_SUCCEEDED":
+        if job.state == 4:
             logger.info("Pipeline completed successfully")
         else:
             logger.error("Pipeline failed with state: %s", job.state)
@@ -372,11 +372,13 @@ def run_pipeline_with_error_handling(
             mandatory_fields,
         )
 
-        if result.state == "PIPELINE_STATE_SUCCEEDED":
+        if result.state == 4:
             logger.info(success_message)
-        else:
-            logger.warning("Pipeline completed with state: %s", result.state)
+            return True
+        
+        logger.warning("Pipeline completed with state: %s", result.state)
+        return False
 
     except (ValueError, RuntimeError) as exc:
         logger.error("Pipeline execution failed: %s", exc)
-        sys.exit(1)
+        return True

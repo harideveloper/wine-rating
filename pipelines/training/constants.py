@@ -45,4 +45,5 @@ MIN_REPLICA_COUNT = os.getenv("MIN_REPLICA_COUNT", "1")
 MAX_REPLICA_COUNT = os.getenv("MAX_REPLICA_COUNT", "1")
 # Logging
 ENABLE_DETAILED_LOGGING = os.getenv("ENABLE_DETAILED_LOGGING", "True")
-IS_LOCAL = os.getenv("IS_LOCAL", "True")
+# IS_LOCAL = os.getenv("IS_LOCAL", "True")
+IS_LOCAL = os.getenv("IS_LOCAL", "true").lower() == "true"
