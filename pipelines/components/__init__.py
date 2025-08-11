@@ -11,6 +11,7 @@ from .model_fetcher import fetch_model
 from .model_promoter import promote_model
 from .model_endpoint_validator import validate_model_endpoint
 from .model_promotion_gate import promotion_gate
+from .model_registerer_gcs import register_model_gcs
 
 __all__ = [
     "load_data",
@@ -24,4 +25,5 @@ __all__ = [
     "promote_model",
     "validate_model_endpoint",
     "promotion_gate",
+    "register_model_gcs"
 ]

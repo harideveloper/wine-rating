@@ -27,6 +27,7 @@ from pipelines.promotion.constants import (
     MAX_REPLICA_COUNT,
     IS_LOCAL,
     PROMOTION_THRESHOLD,
+    MODEL_GCS_URI,
 )
 
 
@@ -54,6 +55,7 @@ class PromotionPipelineConfig(PipelineConfig):
     min_replica_count: int = MIN_REPLICA_COUNT
     max_replica_count: int = MAX_REPLICA_COUNT
     promotion_threshold: float = PROMOTION_THRESHOLD
+    model_gcs_uri: str= MODEL_GCS_URI
 
 
 def get_mandatory_fields() -> List[str]:
@@ -70,6 +72,7 @@ def get_mandatory_fields() -> List[str]:
         "min_replica_count",
         "max_replica_count",
         "promotion_threshold",
+        "model_gcs_uri",
     ]
 
 
@@ -85,6 +88,7 @@ def get_parameter_values(config: PromotionPipelineConfig) -> Dict[str, Any]:
         "min_replica_count": config.min_replica_count,
         "max_replica_count": config.max_replica_count,
         "promotion_threshold": config.promotion_threshold,
+        "model_gcs_uri": config.model_gcs_uri,
     }
 
 

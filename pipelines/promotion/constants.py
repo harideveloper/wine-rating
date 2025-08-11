@@ -40,3 +40,5 @@ MAX_REPLICA_COUNT = os.getenv("MAX_REPLICA_COUNT", "1")
 
 IS_LOCAL = os.getenv("IS_LOCAL", "true").lower() == "true"
 PROMOTION_THRESHOLD = os.getenv("PROMOTION_THRESHOLD", "0.9")
+
+MODEL_GCS_URI = os.getenv("MODEL_GCS_URI", f"gs://{PIPELINE_BUCKET}/promoted_models/{BUILD_NUMBER}/")
